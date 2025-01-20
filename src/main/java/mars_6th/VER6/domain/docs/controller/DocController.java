@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import mars_6th.VER6.domain.docs.controller.dto.request.DocCreateRequest;
+import mars_6th.VER6.domain.docs.controller.dto.request.DocRequest;
 import mars_6th.VER6.domain.docs.service.DocService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,21 +17,21 @@ public class DocController {
 
     private final DocService docService;
 
-    @Operation(summary = "문서 단건 조회 API")
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getDoc(@PathVariable Long id) {
-        return ResponseEntity.ok(docService.getDoc(id));
+    @Operation(summary = "문서 조회 API")
+    @GetMapping("/{docTypeId}")
+    public ResponseEntity<?> getDocs(@PathVariable Long docTypeId) {
+        return ResponseEntity.ok(docService.getDocs(docTypeId));
     }
 
     @Operation(summary = "문서 생성 API")
     @PostMapping
-    public ResponseEntity<?> createDoc(@Valid @RequestBody DocCreateRequest request) {
+    public ResponseEntity<?> createDoc(@Valid @RequestBody DocRequest request) {
         return ResponseEntity.ok(docService.createDoc(request));
     }
 
     @Operation(summary = "문서 수정 API")
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateDoc(@PathVariable Long id, @Valid @RequestBody DocCreateRequest request) {
+    public ResponseEntity<?> updateDoc(@PathVariable Long id, @Valid @RequestBody DocRequest request) {
         return ResponseEntity.ok(docService.updateDoc(id, request));
     }
 

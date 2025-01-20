@@ -19,6 +19,10 @@ public class Doc extends BaseEntity {
     @JoinColumn(name = "doc_type_id")
     private DocType docType;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "doc_request_id")
+    private DocRequest docRequest;
+
     private String title;
 
     private String content;
@@ -34,5 +38,10 @@ public class Doc extends BaseEntity {
     public void addDocType(DocType docType) {
         this.docType = docType;
         docType.getDocs().add(this);
+    }
+
+    public Doc updateName(String title) {
+        this.title = title;
+        return this;
     }
 }
