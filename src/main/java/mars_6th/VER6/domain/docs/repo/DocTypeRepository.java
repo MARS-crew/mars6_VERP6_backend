@@ -12,4 +12,6 @@ public interface DocTypeRepository extends JpaRepository<DocType, Long> {
                 () -> new BaseException(DocExceptionType.NOT_FOUND_DOC_TYPE)
         );
     }
+
+    boolean existsByName(String name);
 }

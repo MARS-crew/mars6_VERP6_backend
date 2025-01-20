@@ -20,7 +20,12 @@ public class DocType extends BaseEntity {
     @OneToMany(mappedBy = "docType")
     private List<Doc> docs;
 
+    @Column(unique = true)
     private String name;
 
     private Long createdBy;
+
+    public void updateName(String name) {
+        this.name = name;
+    }
 }
