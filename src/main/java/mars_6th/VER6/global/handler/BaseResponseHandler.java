@@ -19,6 +19,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 @RestControllerAdvice
 public class BaseResponseHandler implements ResponseBodyAdvice<Object> {
 
+    private static final String SWAGGER_PATH = "/v3/api-docs";
+
     @Override
     public boolean supports(MethodParameter returnType,
                             Class<? extends HttpMessageConverter<?>> converterType
@@ -40,6 +42,10 @@ public class BaseResponseHandler implements ResponseBodyAdvice<Object> {
         HttpStatus resolve = HttpStatus.resolve(status);
 
         if (resolve == null) {
+            return body;
+        }
+
+        if (request.getURI().getPath().contains(SWAGGER_PATH)) {
             return body;
         }
 
