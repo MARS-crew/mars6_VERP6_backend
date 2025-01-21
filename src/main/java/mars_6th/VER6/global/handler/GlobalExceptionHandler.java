@@ -7,6 +7,7 @@ import mars_6th.VER6.global.exception.BaseExceptionType;
 import mars_6th.VER6.global.exception.ExceptionType;
 import mars_6th.VER6.global.response.ExceptionResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -30,6 +31,13 @@ public class GlobalExceptionHandler {
         log.warn("{} URI: {}", exceptionType.getMessage(), request.getRequestURI());
         return ResponseEntity.status(exceptionType.getHttpStatus())
                 .body(new ExceptionResponse(exceptionType));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ResponseEntity<ExceptionResponse> handleMethodArgumentNotValidException(HttpServletRequest request, MethodArgumentNotValidException e) {
+        log.warn("요청 인자가 올바르지 않습니다 URI: {}", request.getRequestURI());
+        return ResponseEntity.badRequest()
+                .body(new ExceptionResponse(BaseExceptionType.ARGUMENT_NOT_VALID));
     }
 
     private String convertToString(Exception e) {
