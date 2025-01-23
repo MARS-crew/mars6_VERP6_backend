@@ -4,7 +4,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
-import mars_6th.VER6.domain.docs.controller.dto.request.DocRequest;
+import mars_6th.VER6.domain.docs.controller.dto.request.DocRequestDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,10 +25,10 @@ class NoSpaceSizeValidatorTest {
     @Test
     void whenTitleIsValid_thenNoViolations() {
         // given
-        DocRequest request = new DocRequest("ValidTitle");
+        DocRequestDto request = new DocRequestDto("ValidTitle", 1L);
 
         // when
-        Set<ConstraintViolation<DocRequest>> violations = validator.validate(request);
+        Set<ConstraintViolation<DocRequestDto>> violations = validator.validate(request);
 
         // then
         assertThat(violations).isEmpty();
@@ -37,10 +37,10 @@ class NoSpaceSizeValidatorTest {
     @Test
     void whenTitleHasSpacesAndValidLength_thenNoViolations() {
         // given
-        DocRequest request = new DocRequest("Valid Title With Spaces");
+        DocRequestDto request = new DocRequestDto("Valid Title With Spaces", 1L);
 
         // when
-        Set<ConstraintViolation<DocRequest>> violations = validator.validate(request);
+        Set<ConstraintViolation<DocRequestDto>> violations = validator.validate(request);
 
         // then
         assertThat(violations).isEmpty();
@@ -49,10 +49,10 @@ class NoSpaceSizeValidatorTest {
     @Test
     void whenTitleIsTooShort_thenViolations() {
         // given
-        DocRequest request = new DocRequest("");
+        DocRequestDto request = new DocRequestDto("", 1L);
 
         // when
-        Set<ConstraintViolation<DocRequest>> violations = validator.validate(request);
+        Set<ConstraintViolation<DocRequestDto>> violations = validator.validate(request);
 
         // then
         assertThat(violations).isNotEmpty();
@@ -63,10 +63,10 @@ class NoSpaceSizeValidatorTest {
     @Test
     void whenTitleIsTooLong_thenViolations() {
         // given
-        DocRequest request = new DocRequest("ThisTitleIsDefinitelyWayTooLongForValidation");
+        DocRequestDto request = new DocRequestDto("ThisTitleIsDefinitelyWayTooLongForValidation", 1L);
 
         // when
-        Set<ConstraintViolation<DocRequest>> violations = validator.validate(request);
+        Set<ConstraintViolation<DocRequestDto>> violations = validator.validate(request);
 
         // then
         assertThat(violations).isNotEmpty();
@@ -77,10 +77,10 @@ class NoSpaceSizeValidatorTest {
     @Test
     void whenTitleOnlyHasSpaces_thenViolations() {
         // given
-        DocRequest request = new DocRequest("     "); // Only spaces
+        DocRequestDto request = new DocRequestDto("     ", 1L); // Only spaces
 
         // when
-        Set<ConstraintViolation<DocRequest>> violations = validator.validate(request);
+        Set<ConstraintViolation<DocRequestDto>> violations = validator.validate(request);
 
         // then
         assertThat(violations).isNotEmpty();
@@ -91,10 +91,10 @@ class NoSpaceSizeValidatorTest {
     @Test
     void whenTitleIsNull_thenViolations() {
         // given
-        DocRequest request = new DocRequest(null);
+        DocRequestDto request = new DocRequestDto(null, 1L);
 
         // when
-        Set<ConstraintViolation<DocRequest>> violations = validator.validate(request);
+        Set<ConstraintViolation<DocRequestDto>> violations = validator.validate(request);
 
         // then
         assertThat(violations).isNotEmpty();

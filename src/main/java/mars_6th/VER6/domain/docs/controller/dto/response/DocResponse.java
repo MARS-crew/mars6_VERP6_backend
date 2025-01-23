@@ -6,8 +6,8 @@ import mars_6th.VER6.global.utils.TimeUtils;
 public record DocResponse(
         String title,
         String fileName,
-        Long currentStep,
-        Long totalStep,
+        Long currentRequestStep,
+        Long totalRequestStep,
         Double completion,
         String timeAgo
 ) {
