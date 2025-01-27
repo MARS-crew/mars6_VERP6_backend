@@ -1,16 +1,22 @@
-package mars_6th.VER6.domain.docs.entity;
+package mars_6th.VER6.domain.member.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.*;
+
+import mars_6th.VER6.global.utils.BaseEntity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDate;
 
-@Getter
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 @Table(name = "tbl_member")
-public class Member {
+public class Member extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -24,10 +30,5 @@ public class Member {
     @Enumerated(EnumType.STRING)
     private MemberRole role;
 
-    @CreatedDate
-    private LocalDate createdAt;
-
-    @LastModifiedDate
-    private LocalDate updatedAt;
 }
 
