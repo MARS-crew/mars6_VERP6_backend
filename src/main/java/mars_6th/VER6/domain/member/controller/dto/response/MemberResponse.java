@@ -4,8 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import mars_6th.VER6.domain.member.entity.Member;
 
-@Getter
-@Setter
 public record MemberResponse(
         String username,
         String token
