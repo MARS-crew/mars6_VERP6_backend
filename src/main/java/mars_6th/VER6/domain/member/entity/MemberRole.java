@@ -1,4 +1,4 @@
-package mars_6th.VER6.domain.docs.entity;
+package mars_6th.VER6.domain.member.entity;
 
 public enum MemberRole {
     TEAM_LEADER,

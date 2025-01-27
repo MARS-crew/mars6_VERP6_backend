@@ -4,8 +4,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import mars_6th.VER6.domain.docs.controller.dto.request.DocRequest;
+import mars_6th.VER6.domain.docs.controller.dto.request.DocRequestDto;
+import mars_6th.VER6.domain.docs.exception.DocExceptionType;
 import mars_6th.VER6.domain.docs.service.DocService;
+import mars_6th.VER6.global.exception.BaseException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,13 +27,13 @@ public class DocController {
 
     @Operation(summary = "문서 생성 API")
     @PostMapping
-    public ResponseEntity<?> createDoc(@Valid @RequestBody DocRequest request) {
+    public ResponseEntity<?> createDoc(@Valid @RequestBody DocRequestDto request) {
         return ResponseEntity.ok(docService.createDoc(request));
     }
 
     @Operation(summary = "문서 수정 API")
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateDoc(@PathVariable Long id, @Valid @RequestBody DocRequest request) {
+    public ResponseEntity<?> updateDoc(@PathVariable Long id, @Valid @RequestBody DocRequestDto request) {
         return ResponseEntity.ok(docService.updateDoc(id, request));
     }
 
@@ -40,5 +42,11 @@ public class DocController {
     public ResponseEntity<?> deleteDoc(@PathVariable Long id) {
         docService.deleteDoc(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<?> test() {
+        throw new BaseException(DocExceptionType.DUPLICATED_DOC_TYPE);
+//        return ResponseEntity.ok().build();
     }
 }

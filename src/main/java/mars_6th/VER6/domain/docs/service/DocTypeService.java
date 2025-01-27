@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import mars_6th.VER6.domain.docs.controller.dto.request.DocTypeRequest;
 import mars_6th.VER6.domain.docs.controller.dto.response.DocTypeResponse;
 import mars_6th.VER6.domain.docs.entity.DocType;
+import mars_6th.VER6.domain.docs.exception.DocExceptionType;
 import mars_6th.VER6.domain.docs.repo.DocTypeRepository;
-import mars_6th.VER6.domain.exception.DocExceptionType;
 import mars_6th.VER6.global.exception.BaseException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,7 +25,7 @@ public class DocTypeService {
         Page<DocType> page = docTypeRepository.findAll(pageable);
         List<DocType> docTypes = page.getContent();
 
-        return docTypes.stream().map(docType -> DocTypeResponse.of(docType)).toList();
+        return docTypes.stream().map(DocTypeResponse::of).toList();
     }
 
     public DocTypeResponse createDocType(DocTypeRequest request) {
