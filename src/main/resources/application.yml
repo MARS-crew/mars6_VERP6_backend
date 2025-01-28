@@ -1,3 +1,23 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
   profiles:
     active: local
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/mars_stm_db
+    username: root
+    password: dongyang
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+minio:
+  url: http://localhost:9000
+  accessKey: minioadmin
+  secretKey: minioadmin
+  bucketName: mars-statement

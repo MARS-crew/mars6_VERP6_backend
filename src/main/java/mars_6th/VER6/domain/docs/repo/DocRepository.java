@@ -1,6 +1,7 @@
 package mars_6th.VER6.domain.docs.repo;
 
 import mars_6th.VER6.domain.docs.entity.Doc;
+import mars_6th.VER6.domain.docs.entity.DocType;
 import mars_6th.VER6.domain.exception.DocExceptionType;
 import mars_6th.VER6.global.exception.BaseException;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,4 +21,6 @@ public interface DocRepository extends JpaRepository <Doc, Long> {
                 .filter(doc -> doc.getDocType().getId().equals(docTypeId))
                 .toList();
     }
+
+    List<Doc> findByTitle(String title);
 }
