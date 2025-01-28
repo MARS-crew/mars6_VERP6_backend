@@ -1,4 +1,4 @@
-package mars_6th.VER6.domain.exception;
+package mars_6th.VER6.domain.docs.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,4 +19,5 @@ public enum DocExceptionType implements ExceptionType {
     private final HttpStatus httpStatus;
     private final String errorCode;
     private final String message;
+
 }
