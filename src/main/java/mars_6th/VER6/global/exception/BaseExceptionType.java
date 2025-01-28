@@ -14,6 +14,7 @@ public enum BaseExceptionType implements ExceptionType {
     UNKNOWN_SERVER_ERROR(INTERNAL_SERVER_ERROR, "5000", "서버가 응답할 수 없습니다."),
     ARGUMENT_NOT_VALID(BAD_REQUEST, "4001", "요청 인자가 잘못되었습니다."),
     NOT_VALID_METHODS(METHOD_NOT_ALLOWED, "4001", "지원하지 않는 메서드입니다."),
+    DOC_NOT_FOUND(NOT_FOUND, "4041", "요청한 문서를 찾을 수 없습니다.")
     ;
 
     private final HttpStatus httpStatus;

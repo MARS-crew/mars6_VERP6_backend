@@ -5,6 +5,8 @@ import mars_6th.VER6.domain.docs.controller.dto.request.DeDocRequestDto;
 import mars_6th.VER6.domain.docs.controller.dto.response.DeResponseDto;
 import mars_6th.VER6.domain.docs.entity.Doc;
 import mars_6th.VER6.domain.docs.repo.DocRepository;
+import mars_6th.VER6.global.exception.BaseException;
+import mars_6th.VER6.global.exception.BaseExceptionType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +23,9 @@ public class DocDetailService {
 
     public List<DeResponseDto> getDeDocs(String docTitle) {
         List<Doc> docs = docRepository.findByTitle(docTitle);
+        if (docs.isEmpty()) {
+            throw new BaseException(BaseExceptionType.DOC_NOT_FOUND);
+        }
 
         return docs.stream()
                 .map(doc -> new DeResponseDto(
@@ -34,7 +39,7 @@ public class DocDetailService {
     public DeResponseDto createDeDoc(Long docId, DeDocRequestDto deDocRequestDto, MultipartFile file, String url) {
 
         Doc existingDoc = docRepository.findById(docId)
-                .orElseThrow(() -> new RuntimeException("문서를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
         String fileUrl = null;
 
@@ -62,26 +67,26 @@ public class DocDetailService {
 
     public DeResponseDto updateDeDoc(Long docId, DeDocRequestDto deDocRequestDto, MultipartFile file, String url) {
         Doc doc = docRepository.findById(docId)
-                .orElseThrow(() -> new RuntimeException("서류를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
         String fileUrl = null;
 
         if (file != null && !file.isEmpty()) {
             fileUrl = minioService.uploadFile(file);
-            doc.setFileName(file.getOriginalFilename());
+            doc.updateFileName(file.getOriginalFilename());
         }
 
         if (url != null && !url.isEmpty()) {
             fileUrl = url;
-            doc.setFileName(url);
+            doc.updateFileName(url);
         }
 
         if (fileUrl != null) {
-            doc.setFileUrl(fileUrl);
+            doc.updateFileUrl(fileUrl);
         }
 
         doc.updateVersion(deDocRequestDto.getVersion());
-        doc.setContent(deDocRequestDto.getContent());
+        doc.updateContent(deDocRequestDto.getContent());
 
         docRepository.save(doc);
 
@@ -90,7 +95,7 @@ public class DocDetailService {
 
     public void deleteDoc(Long docId) {
         Doc doc = docRepository.findById(docId)
-                .orElseThrow(() -> new RuntimeException("서류를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
         if (doc.getFileUrl() != null && !doc.getFileUrl().isEmpty() && !minioService.isExternalUrl(doc.getFileUrl())) {
             minioService.deleteFile(doc.getFileUrl());

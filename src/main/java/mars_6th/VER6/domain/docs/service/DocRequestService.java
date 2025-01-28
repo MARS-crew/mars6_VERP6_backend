@@ -1,22 +1,23 @@
 package mars_6th.VER6.domain.docs.service;
 
 import lombok.RequiredArgsConstructor;
-import mars_6th.VER6.domain.docs.controller.DocRequestController;
-import mars_6th.VER6.domain.docs.controller.dto.request.DeDocRequestDto;
 import mars_6th.VER6.domain.docs.controller.dto.request.DocReqRequestDto;
-import mars_6th.VER6.domain.docs.controller.dto.response.DeResponseDto;
 import mars_6th.VER6.domain.docs.controller.dto.response.DocReqResponseDto;
 import mars_6th.VER6.domain.docs.entity.Doc;
 import mars_6th.VER6.domain.docs.entity.DocRequest;
 import mars_6th.VER6.domain.docs.entity.DocRequestStatus;
 import mars_6th.VER6.domain.docs.repo.DocRepository;
 import mars_6th.VER6.domain.docs.repo.DocReqRepository;
+import mars_6th.VER6.global.exception.BaseException;
+import mars_6th.VER6.global.exception.BaseExceptionType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class DocRequestService {
 
@@ -27,12 +28,12 @@ public class DocRequestService {
     public List<DocReqResponseDto> getDocReq(Long docId) {
 
         Doc doc = docRepository.findById(docId)
-                .orElseThrow(() -> new RuntimeException("해당 서류를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
         List<DocRequest> docRequests = doc.getDocRequest();
 
         if (docRequests == null || docRequests.isEmpty()) {
-            throw new RuntimeException("해당 서류에 대한 요청이 존재하지 않습니다.");
+            throw new BaseException(BaseExceptionType.DOC_NOT_FOUND);
         }
 
         return doc.getDocRequest().stream()
@@ -48,7 +49,7 @@ public class DocRequestService {
 
     public DocReqResponseDto createDocReq(Long docId, DocReqRequestDto docReqRequestDto, MultipartFile file, String url) {
         Doc doc = docRepository.findById(docId)
-                .orElseThrow(() -> new RuntimeException("해당 문서를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
         String fileUrl = null;
 
@@ -83,26 +84,26 @@ public class DocRequestService {
 
     public DocReqResponseDto updateDocReq(Long reqId, DocReqRequestDto docReqRequestDto, MultipartFile file, String url) {
         DocRequest docRequest = docReqRepository.findById(reqId)
-                .orElseThrow(() -> new RuntimeException("서류 요청을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
         String fileUrl = null;
 
         if (file != null && !file.isEmpty()) {
             fileUrl = minioService.uploadFile(file);
-            docRequest.setFileName(file.getOriginalFilename());
+            docRequest.updateFileName(file.getOriginalFilename());
         }
 
         if (url != null && !url.isEmpty()) {
             fileUrl = url;
-            docRequest.setFileName(url);
+            docRequest.updateFileName(url);
         }
 
         if (fileUrl != null) {
-            docRequest.setFileUrl(fileUrl);
+            docRequest.updateFileUrl(fileUrl);
         }
 
-        docRequest.setName(docReqRequestDto.getName());
-        docRequest.setContent(docReqRequestDto.getContent());
+        docRequest.updateName(docReqRequestDto.getName());
+        docRequest.updateContent(docReqRequestDto.getContent());
 
 
         docReqRepository.save(docRequest);
@@ -118,7 +119,7 @@ public class DocRequestService {
 
     public void deleteDocReq(Long reqId) {
         DocRequest docRequest = docReqRepository.findById(reqId)
-                .orElseThrow(() -> new RuntimeException("서류 요청을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
         if (docRequest.getFileUrl() != null && !docRequest.getFileUrl().isEmpty() && !minioService.isExternalUrl(docRequest.getFileUrl())) {
             minioService.deleteFile(docRequest.getFileUrl());
@@ -129,7 +130,7 @@ public class DocRequestService {
 
     public DocReqResponseDto changeDocReqStatus(Long reqId, DocRequestStatus newStatus) {
         DocRequest docRequest = docReqRepository.findById(reqId)
-                .orElseThrow(() -> new RuntimeException("서류 요청을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
         docRequest.changeStatus(newStatus);
 

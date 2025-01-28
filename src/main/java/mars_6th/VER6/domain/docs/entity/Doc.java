@@ -8,7 +8,7 @@ import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Data
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -50,6 +50,21 @@ public class Doc extends BaseEntity {
 
     public Doc updateVersion(String version) {
         this.version = version;
+        return this;
+    }
+
+    public Doc updateFileName(String fileName) {
+        this.fileName = fileName;
+        return this;
+    }
+
+    public Doc updateContent(String content) {
+        this.content = content;
+        return this;
+    }
+
+    public Doc updateFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
         return this;
     }
 }
