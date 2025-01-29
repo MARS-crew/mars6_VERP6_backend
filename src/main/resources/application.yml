@@ -3,5 +3,25 @@ server:
     context-path: /api
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
   profiles:
     active: local
+
+  datasource:
+    url: jdbc:mysql://
+    username:
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto:
+    show-sql: true
+
+minio:
+  url:
+  accessKey:
+  secretKey:
+  bucketName:

@@ -20,4 +20,6 @@ public interface DocRepository extends JpaRepository <Doc, Long> {
                 .filter(doc -> doc.getDocType().getId().equals(docTypeId))
                 .toList();
     }
+
+    List<Doc> findByTitle(String title);
 }
