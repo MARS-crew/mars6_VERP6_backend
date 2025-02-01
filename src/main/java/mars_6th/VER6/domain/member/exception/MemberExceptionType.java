@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 public enum MemberExceptionType implements ExceptionType {
 
     NOT_FOUND_MEMBER(HttpStatus.NOT_FOUND, "member-001", "회원을 찾을 수 없습니다."),
+    NOT_PERMISSION(HttpStatus.FORBIDDEN, "member-002", "권한이 없습니다."),
     ;
 
     private final HttpStatus httpStatus;

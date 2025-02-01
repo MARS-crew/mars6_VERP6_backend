@@ -2,10 +2,13 @@ package mars_6th.VER6.domain.docs.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import mars_6th.VER6.domain.docs.controller.dto.request.DocReqRequestDto;
 import mars_6th.VER6.domain.docs.controller.dto.response.DocReqResponseDto;
+import mars_6th.VER6.domain.docs.controller.dto.response.StatusCountDto;
 import mars_6th.VER6.domain.docs.entity.DocRequestStatus;
 import mars_6th.VER6.domain.docs.service.DocRequestService;
 import org.springframework.http.MediaType;
@@ -36,8 +39,10 @@ public class DocRequestController {
             @RequestParam Long docId,
             @RequestPart @Valid DocReqRequestDto docReqRequestDto,
             @RequestPart(required = false) MultipartFile file,
-            @RequestParam(required = false) String url) {
-        DocReqResponseDto response = docRequestService.createDocReq(docId, docReqRequestDto, file, url);
+            @RequestParam(required = false) String url,
+            HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        DocReqResponseDto response = docRequestService.createDocReq(docId, docReqRequestDto, file, url, session);
         return ResponseEntity.ok(response);
     }
 
@@ -47,8 +52,10 @@ public class DocRequestController {
             @PathVariable Long reqId,
             @RequestPart @Valid DocReqRequestDto docReqRequestDto,
             @RequestPart(required = false) MultipartFile file,
-            @RequestParam(required = false) String url) {
-        DocReqResponseDto response = docRequestService.updateDocReq(reqId, docReqRequestDto, file, url);
+            @RequestParam(required = false) String url,
+            HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        DocReqResponseDto response = docRequestService.updateDocReq(reqId, docReqRequestDto, file, url, session);
         return ResponseEntity.ok(response);
     }
 
@@ -63,8 +70,17 @@ public class DocRequestController {
     @PutMapping("/{reqId}/status")
     public ResponseEntity<DocReqResponseDto> updateDocReqStatus(
             @PathVariable Long reqId,
-            @RequestParam DocRequestStatus status) {
-        DocReqResponseDto response = docRequestService.changeDocReqStatus(reqId, status);
+            @RequestParam DocRequestStatus status,
+            HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        DocReqResponseDto response = docRequestService.changeDocReqStatus(reqId, status, session);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "문서 요쳥 상태별 개수 API")
+    @GetMapping("/status-counts")
+    public ResponseEntity<List<StatusCountDto>> getRequestCountsByStatus() {
+        List<StatusCountDto> statusCounts = docRequestService.getRequestCountsByStatus();
+        return ResponseEntity.ok(statusCounts);
     }
 }

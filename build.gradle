@@ -41,7 +41,7 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.4'
 
 	//MiniO
-	implementation 'io.minio:minio:8.5.2'
+	implementation 'io.minio:minio:8.4.2'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

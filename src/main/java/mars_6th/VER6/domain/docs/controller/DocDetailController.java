@@ -2,6 +2,8 @@ package mars_6th.VER6.domain.docs.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import mars_6th.VER6.domain.docs.controller.dto.request.DeDocRequestDto;
@@ -35,8 +37,10 @@ public class DocDetailController {
             @RequestParam Long docId,
             @RequestPart @Valid DeDocRequestDto docRequestDto,
             @RequestPart(required = false) MultipartFile file,
-            @RequestParam(required = false) String url) {
-        DeResponseDto response = docDetailService.createDeDoc(docId, docRequestDto, file, url);
+            @RequestParam(required = false) String url,
+            HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        DeResponseDto response = docDetailService.createDeDoc(docId, docRequestDto, file, url, session);
         return ResponseEntity.ok(response);
     }
 
@@ -46,15 +50,18 @@ public class DocDetailController {
             @PathVariable Long docId,
             @RequestPart @Valid DeDocRequestDto docRequestDto,
             @RequestPart(required = false) MultipartFile file,
-            @RequestParam(required = false) String url) {
-        DeResponseDto response = docDetailService.updateDeDoc(docId, docRequestDto, file, url);
+            @RequestParam(required = false) String url,
+            HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        DeResponseDto response = docDetailService.updateDeDoc(docId, docRequestDto, file, url, session);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "문서 종류별 리스트 삭제 API")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDeDoc(@PathVariable Long id) {
-        docDetailService.deleteDoc(id);
+    public ResponseEntity<Void> deleteDeDoc(@PathVariable Long id, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        docDetailService.deleteDoc(id, session);
         return ResponseEntity.noContent().build();
     }
 }
