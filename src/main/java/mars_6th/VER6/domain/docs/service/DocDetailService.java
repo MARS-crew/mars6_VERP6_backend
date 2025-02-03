@@ -1,10 +1,15 @@
 package mars_6th.VER6.domain.docs.service;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import mars_6th.VER6.domain.docs.controller.dto.request.DeDocRequestDto;
 import mars_6th.VER6.domain.docs.controller.dto.response.DeResponseDto;
 import mars_6th.VER6.domain.docs.entity.Doc;
 import mars_6th.VER6.domain.docs.repo.DocRepository;
+import mars_6th.VER6.domain.member.entity.Member;
+import mars_6th.VER6.domain.member.entity.MemberRole;
+import mars_6th.VER6.domain.member.exception.MemberExceptionType;
+import mars_6th.VER6.domain.member.repo.MemberRepository;
 import mars_6th.VER6.global.exception.BaseException;
 import mars_6th.VER6.global.exception.BaseExceptionType;
 import org.springframework.stereotype.Service;
@@ -19,6 +24,7 @@ import java.util.List;
 public class DocDetailService {
 
     private final DocRepository docRepository;
+    private final MemberRepository memberRepository;
     private final MinioService minioService;
 
     public List<DeResponseDto> getDeDocs(String docTitle) {
@@ -36,8 +42,19 @@ public class DocDetailService {
                 .toList();
     }
 
-    public DeResponseDto createDeDoc(Long docId, DeDocRequestDto deDocRequestDto, MultipartFile file, String url) {
+    public DeResponseDto createDeDoc(Long docId, DeDocRequestDto deDocRequestDto, MultipartFile file, String url, HttpSession session) {
 
+        Long userId = (Long) session.getAttribute("id");
+        if (userId == null) {
+            throw new BaseException(MemberExceptionType.NOT_FOUND_MEMBER);
+        }
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(() -> new BaseException(MemberExceptionType.NOT_FOUND_MEMBER));
+
+        if (member.getRole() != MemberRole.TEAM_LEADER) {
+            throw new BaseException(MemberExceptionType.NOT_PERMISSION);
+        }
+        
         Doc existingDoc = docRepository.findById(docId)
                 .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
@@ -55,6 +72,7 @@ public class DocDetailService {
                 .title(existingDoc.getTitle())
                 .content(deDocRequestDto.getContent())
                 .version(deDocRequestDto.getVersion())
+                .createdBy(member.getId())
                 .fileName(file != null ? file.getOriginalFilename() : url)
                 .fileUrl(fileUrl)
                 .docType(existingDoc.getDocType())
@@ -65,7 +83,19 @@ public class DocDetailService {
         return new DeResponseDto(newDoc.getVersion(), newDoc.getFileName(), newDoc.getCreatedAt().toLocalDate());
     }
 
-    public DeResponseDto updateDeDoc(Long docId, DeDocRequestDto deDocRequestDto, MultipartFile file, String url) {
+    public DeResponseDto updateDeDoc(Long docId, DeDocRequestDto deDocRequestDto, MultipartFile file, String url, HttpSession session) {
+
+        Long userId = (Long) session.getAttribute("id");
+        if (userId == null) {
+            throw new BaseException(MemberExceptionType.NOT_FOUND_MEMBER);
+        }
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(() -> new BaseException(MemberExceptionType.NOT_FOUND_MEMBER));
+
+        if (member.getRole() != MemberRole.TEAM_LEADER) {
+            throw new BaseException(MemberExceptionType.NOT_PERMISSION);
+        }
+
         Doc doc = docRepository.findById(docId)
                 .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
@@ -93,7 +123,19 @@ public class DocDetailService {
         return new DeResponseDto(doc.getVersion(), doc.getFileName(), doc.getCreatedAt().toLocalDate());
     }
 
-    public void deleteDoc(Long docId) {
+    public void deleteDoc(Long docId, HttpSession session) {
+
+        Long userId = (Long) session.getAttribute("id");
+        if (userId == null) {
+            throw new BaseException(MemberExceptionType.NOT_FOUND_MEMBER);
+        }
+        Member member = memberRepository.findById(userId)
+                .orElseThrow(() -> new BaseException(MemberExceptionType.NOT_FOUND_MEMBER));
+
+        if (member.getRole() != MemberRole.TEAM_LEADER) {
+            throw new BaseException(MemberExceptionType.NOT_PERMISSION);
+        }
+
         Doc doc = docRepository.findById(docId)
                 .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 

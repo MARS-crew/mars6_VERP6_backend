@@ -69,9 +69,9 @@ public class MinioService {
         }
 
         try {
-            String objectName = fileUrl.startsWith("/") ? fileUrl.substring(1) : fileUrl;
+            String bucketName = minioConfig.getBucketName();
+            String objectName = fileUrl.replaceFirst("^/" + bucketName + "/", "");
 
-            log.info("삭제하려는 파일 경로 (최종 경로): {}", objectName);
             log.info("파일 삭제 요청: Bucket: {}, Object: {}", minioConfig.getBucketName(), objectName);
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
@@ -88,12 +88,10 @@ public class MinioService {
                                 .build()
                 );
             } catch (Exception e) {
-                log.info("파일 삭제 확인됨: {}", objectName);
-            }
 
+            }
             log.info("파일 삭제 성공: {}", fileUrl);
         } catch (Exception e) {
-            log.error("파일 삭제 중 오류 발생: {}", e.getMessage(), e);
             throw new RuntimeException("파일 삭제 중 오류 발생", e);
         }
     }

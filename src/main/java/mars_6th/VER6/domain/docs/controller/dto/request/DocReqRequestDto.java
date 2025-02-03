@@ -5,6 +5,5 @@ import lombok.Data;
 @Data
 public class DocReqRequestDto {
 
-    private String name;
     private String content;
 }
