@@ -2,30 +2,31 @@ package mars_6th.VER6.domain.docs.service;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import mars_6th.VER6.domain.docs.controller.dto.request.DeDocRequestDto;
 import mars_6th.VER6.domain.docs.controller.dto.response.DeResponseDto;
 import mars_6th.VER6.domain.docs.entity.Doc;
 import mars_6th.VER6.domain.docs.repo.DocRepository;
 import mars_6th.VER6.domain.member.entity.Member;
-import mars_6th.VER6.domain.member.entity.MemberRole;
-import mars_6th.VER6.domain.member.exception.MemberExceptionType;
-import mars_6th.VER6.domain.member.repo.MemberRepository;
+import mars_6th.VER6.domain.minio.service.FileService;
+import mars_6th.VER6.domain.minio.service.SessionService;
 import mars_6th.VER6.global.exception.BaseException;
 import mars_6th.VER6.global.exception.BaseExceptionType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class DocDetailService {
 
     private final DocRepository docRepository;
-    private final MemberRepository memberRepository;
-    private final MinioService minioService;
+    private final FileService fileService;
+    private final SessionService sessionService;
+
 
     public List<DeResponseDto> getDeDocs(String docTitle) {
         List<Doc> docs = docRepository.findByTitle(docTitle);
@@ -42,107 +43,60 @@ public class DocDetailService {
                 .toList();
     }
 
-    public DeResponseDto createDeDoc(Long docId, DeDocRequestDto deDocRequestDto, MultipartFile file, String url, HttpSession session) {
-
-        Long userId = (Long) session.getAttribute("id");
-        if (userId == null) {
-            throw new BaseException(MemberExceptionType.NOT_FOUND_MEMBER);
-        }
-        Member member = memberRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(MemberExceptionType.NOT_FOUND_MEMBER));
-
-        if (member.getRole() != MemberRole.TEAM_LEADER) {
-            throw new BaseException(MemberExceptionType.NOT_PERMISSION);
-        }
-        
+    public DeResponseDto createDeDoc(Long docId, DeDocRequestDto deDocRequestDto, String originalFileName, String externalUrl, HttpSession session) {
+        Member member = sessionService.validateSession(session);
         Doc existingDoc = docRepository.findById(docId)
                 .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
-        String fileUrl = null;
-
-        if (file != null && !file.isEmpty()) {
-            fileUrl = minioService.uploadFile(file);
-        }
-
-        if (url != null && !url.isEmpty()) {
-            fileUrl = url;
-        }
+        String fileUrl = fileService.determineFileUrl(externalUrl, session);
+        String storedFileName = (originalFileName != null && !originalFileName.isBlank()) ? originalFileName : fileUrl;
 
         Doc newDoc = Doc.builder()
                 .title(existingDoc.getTitle())
                 .content(deDocRequestDto.getContent())
                 .version(deDocRequestDto.getVersion())
                 .createdBy(member.getId())
-                .fileName(file != null ? file.getOriginalFilename() : url)
+                .fileName(storedFileName)
                 .fileUrl(fileUrl)
                 .docType(existingDoc.getDocType())
                 .build();
 
         docRepository.save(newDoc);
-
+        log.info("문서 생성 성공: {}", newDoc);
         return new DeResponseDto(newDoc.getVersion(), newDoc.getFileName(), newDoc.getCreatedAt().toLocalDate());
     }
 
-    public DeResponseDto updateDeDoc(Long docId, DeDocRequestDto deDocRequestDto, MultipartFile file, String url, HttpSession session) {
-
-        Long userId = (Long) session.getAttribute("id");
-        if (userId == null) {
-            throw new BaseException(MemberExceptionType.NOT_FOUND_MEMBER);
-        }
-        Member member = memberRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(MemberExceptionType.NOT_FOUND_MEMBER));
-
-        if (member.getRole() != MemberRole.TEAM_LEADER) {
-            throw new BaseException(MemberExceptionType.NOT_PERMISSION);
-        }
-
+    public DeResponseDto updateDeDoc(Long docId, DeDocRequestDto deDocRequestDto, String originalFileName, String externalUrl, HttpSession session) {
+        sessionService.validateSession(session);
         Doc doc = docRepository.findById(docId)
                 .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
-        String fileUrl = null;
+        String fileUrl = fileService.determineFileUrl(externalUrl, session);
+        String storedFileName = (originalFileName != null && !originalFileName.isBlank()) ? originalFileName : fileUrl;
 
-        if (file != null && !file.isEmpty()) {
-            fileUrl = minioService.uploadFile(file);
-            doc.updateFileName(file.getOriginalFilename());
-        }
-
-        if (url != null && !url.isEmpty()) {
-            fileUrl = url;
-            doc.updateFileName(url);
-        }
-
-        if (fileUrl != null) {
-            doc.updateFileUrl(fileUrl);
-        }
-
+        doc.updateFileUrl(fileUrl);
+        doc.updateFileName(storedFileName);
         doc.updateVersion(deDocRequestDto.getVersion());
         doc.updateContent(deDocRequestDto.getContent());
 
-        docRepository.save(doc);
-
+        log.info("문서 업데이트 성공: {}", doc);
         return new DeResponseDto(doc.getVersion(), doc.getFileName(), doc.getCreatedAt().toLocalDate());
     }
 
     public void deleteDoc(Long docId, HttpSession session) {
-
-        Long userId = (Long) session.getAttribute("id");
-        if (userId == null) {
-            throw new BaseException(MemberExceptionType.NOT_FOUND_MEMBER);
-        }
-        Member member = memberRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(MemberExceptionType.NOT_FOUND_MEMBER));
-
-        if (member.getRole() != MemberRole.TEAM_LEADER) {
-            throw new BaseException(MemberExceptionType.NOT_PERMISSION);
-        }
-
+        sessionService.validateSession(session);
         Doc doc = docRepository.findById(docId)
                 .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
-        if (doc.getFileUrl() != null && !doc.getFileUrl().isEmpty() && !minioService.isExternalUrl(doc.getFileUrl())) {
-            minioService.deleteFile(doc.getFileUrl());
-        }
-
+        fileService.deleteFileIfInternal(doc.getFileUrl());
         docRepository.delete(doc);
+        log.info("문서 삭제 성공: {}", docId);
+    }
+
+    public String getFilePath(Long docId, HttpSession session) {
+        sessionService.validateSession(session);
+        Doc doc = docRepository.findById(docId)
+                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
+        return doc.getFileUrl();
     }
 }
