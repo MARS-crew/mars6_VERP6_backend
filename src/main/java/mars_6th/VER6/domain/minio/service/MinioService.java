@@ -1,14 +1,15 @@
 package mars_6th.VER6.domain.minio.service;
 
-import io.minio.*;
+import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.MinioClient;
+import io.minio.RemoveObjectArgs;
 import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mars_6th.VER6.domain.docs.exception.DocExceptionType;
 import mars_6th.VER6.global.config.MinioConfig;
 import mars_6th.VER6.global.exception.BaseException;
-import mars_6th.VER6.global.exception.BaseExceptionType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +21,7 @@ public class MinioService {
 
     public String getPresignedUploadUrl(String filename, int expiryMinutes) {
         if (filename == null || filename.isBlank()) {
-            throw new BaseException(BaseExceptionType.EMPTY_FILE_ERROR);
+            throw new BaseException(DocExceptionType.EMPTY_FILE_ERROR);
         }
 
         try {
@@ -38,13 +39,13 @@ public class MinioService {
 
         } catch (Exception e) {
             log.error("파일 업로드 URL 생성 중 오류 발생: {}", e.getMessage(), e);
-            throw new BaseException(BaseExceptionType.FILE_UPLOAD_ERROR);
+            throw new BaseException(DocExceptionType.FILE_UPLOAD_ERROR);
         }
     }
 
     public String getPresignedDownloadUrl(String filename, int expiryMinutes) {
         if (filename == null || filename.isBlank()) {
-            throw new BaseException(BaseExceptionType.EMPTY_FILE_ERROR);
+            throw new BaseException(DocExceptionType.EMPTY_FILE_ERROR);
         }
 
         try {
@@ -62,13 +63,13 @@ public class MinioService {
 
         } catch (Exception e) {
             log.error("파일 다운로드 URL 생성 중 오류 발생: {}", e.getMessage(), e);
-            throw new BaseException(BaseExceptionType.FILE_DOWNLOAD_ERROR);
+            throw new BaseException(DocExceptionType.FILE_DOWNLOAD_ERROR);
         }
     }
 
     public void deleteFile(String fileUrl) {
         if (fileUrl == null || fileUrl.isBlank()) {
-            throw new BaseException(BaseExceptionType.EMPTY_FILE_PATH_ERROR);
+            throw new BaseException(DocExceptionType.EMPTY_FILE_PATH_ERROR);
         }
 
         try {
@@ -85,13 +86,13 @@ public class MinioService {
 
         } catch (Exception e) {
             log.error("파일 삭제 중 오류 발생: {}", e.getMessage(), e);
-            throw new BaseException(BaseExceptionType.FILE_DELETE_ERROR);
+            throw new BaseException(DocExceptionType.FILE_DELETE_ERROR);
         }
     }
 
     public String getFilePath(String filename) {
         if (filename == null || filename.isBlank()) {
-            throw new BaseException(BaseExceptionType.EMPTY_FILE_ERROR);
+            throw new BaseException(DocExceptionType.EMPTY_FILE_ERROR);
         }
         return "/" + minioConfig.getBucketName() + "/" + filename;
     }
@@ -103,7 +104,7 @@ public class MinioService {
     public String extractObject(String fileUrl) {
         String bucketPrefix = "/" + minioConfig.getBucketName() + "/";
         if (!fileUrl.startsWith(bucketPrefix)) {
-            throw new BaseException(BaseExceptionType.INVALID_FILE_PATH_ERROR);
+            throw new BaseException(DocExceptionType.INVALID_FILE_PATH_ERROR);
         }
         return fileUrl.replaceFirst("^" + bucketPrefix, "");
     }

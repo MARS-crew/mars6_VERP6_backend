@@ -3,9 +3,9 @@ package mars_6th.VER6.domain.minio.service;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import mars_6th.VER6.domain.docs.exception.DocExceptionType;
 import mars_6th.VER6.domain.minio.dto.PresignedUrlResponseDto;
 import mars_6th.VER6.global.exception.BaseException;
-import mars_6th.VER6.global.exception.BaseExceptionType;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,14 +28,14 @@ public class FileService {
         }
         Object fileNameObj = session.getAttribute("generatedFileName");
         if (fileNameObj == null) {
-            throw new BaseException(BaseExceptionType.EMPTY_FILE_ERROR);
+            throw new BaseException(DocExceptionType.EMPTY_FILE_ERROR);
         }
         return minioService.getFilePath(fileNameObj.toString());
     }
 
     public String getDownloadUrl(String fileUrl) {
         if (fileUrl == null || fileUrl.isEmpty()) {
-            throw new BaseException(BaseExceptionType.FILE_DOWNLOAD_ERROR);
+            throw new BaseException(DocExceptionType.FILE_DOWNLOAD_ERROR);
         }
         if (minioService.isExternalUrl(fileUrl)) {
             return fileUrl;

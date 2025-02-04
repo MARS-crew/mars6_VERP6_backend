@@ -6,12 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import mars_6th.VER6.domain.docs.controller.dto.request.DeDocRequestDto;
 import mars_6th.VER6.domain.docs.controller.dto.response.DeResponseDto;
 import mars_6th.VER6.domain.docs.entity.Doc;
+import mars_6th.VER6.domain.docs.exception.DocExceptionType;
 import mars_6th.VER6.domain.docs.repo.DocRepository;
 import mars_6th.VER6.domain.member.entity.Member;
 import mars_6th.VER6.domain.minio.service.FileService;
 import mars_6th.VER6.domain.minio.service.SessionService;
 import mars_6th.VER6.global.exception.BaseException;
-import mars_6th.VER6.global.exception.BaseExceptionType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +31,7 @@ public class DocDetailService {
     public List<DeResponseDto> getDeDocs(String docTitle) {
         List<Doc> docs = docRepository.findByTitle(docTitle);
         if (docs.isEmpty()) {
-            throw new BaseException(BaseExceptionType.DOC_NOT_FOUND);
+            throw new BaseException(DocExceptionType.DOC_NOT_FOUND);
         }
 
         return docs.stream()
@@ -46,7 +46,7 @@ public class DocDetailService {
     public DeResponseDto createDeDoc(Long docId, DeDocRequestDto deDocRequestDto, String originalFileName, String externalUrl, HttpSession session) {
         Member member = sessionService.validateSession(session);
         Doc existingDoc = docRepository.findById(docId)
-                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(DocExceptionType.DOC_NOT_FOUND));
 
         String fileUrl = fileService.determineFileUrl(externalUrl, session);
         String storedFileName = (originalFileName != null && !originalFileName.isBlank()) ? originalFileName : fileUrl;
@@ -69,7 +69,7 @@ public class DocDetailService {
     public DeResponseDto updateDeDoc(Long docId, DeDocRequestDto deDocRequestDto, String originalFileName, String externalUrl, HttpSession session) {
         sessionService.validateSession(session);
         Doc doc = docRepository.findById(docId)
-                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(DocExceptionType.DOC_NOT_FOUND));
 
         String fileUrl = fileService.determineFileUrl(externalUrl, session);
         String storedFileName = (originalFileName != null && !originalFileName.isBlank()) ? originalFileName : fileUrl;
@@ -86,7 +86,7 @@ public class DocDetailService {
     public void deleteDoc(Long docId, HttpSession session) {
         sessionService.validateSession(session);
         Doc doc = docRepository.findById(docId)
-                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(DocExceptionType.DOC_NOT_FOUND));
 
         fileService.deleteFileIfInternal(doc.getFileUrl());
         docRepository.delete(doc);
@@ -96,7 +96,7 @@ public class DocDetailService {
     public String getFilePath(Long docId, HttpSession session) {
         sessionService.validateSession(session);
         Doc doc = docRepository.findById(docId)
-                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(DocExceptionType.DOC_NOT_FOUND));
         return doc.getFileUrl();
     }
 }

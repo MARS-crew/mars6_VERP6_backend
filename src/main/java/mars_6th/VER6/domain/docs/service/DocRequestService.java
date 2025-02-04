@@ -9,13 +9,13 @@ import mars_6th.VER6.domain.docs.controller.dto.response.StatusCountDto;
 import mars_6th.VER6.domain.docs.entity.Doc;
 import mars_6th.VER6.domain.docs.entity.DocRequest;
 import mars_6th.VER6.domain.docs.entity.DocRequestStatus;
+import mars_6th.VER6.domain.docs.exception.DocExceptionType;
 import mars_6th.VER6.domain.docs.repo.DocRepository;
 import mars_6th.VER6.domain.docs.repo.DocReqRepository;
 import mars_6th.VER6.domain.member.entity.Member;
 import mars_6th.VER6.domain.minio.service.FileService;
 import mars_6th.VER6.domain.minio.service.SessionService;
 import mars_6th.VER6.global.exception.BaseException;
-import mars_6th.VER6.global.exception.BaseExceptionType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,12 +34,12 @@ public class DocRequestService {
 
     public List<DocReqResponseDto> getDocReq(Long docId) {
         Doc doc = docRepository.findById(docId)
-                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(DocExceptionType.DOC_NOT_FOUND));
 
         List<DocRequest> docRequests = doc.getDocRequest();
 
         if (docRequests == null || docRequests.isEmpty()) {
-            throw new BaseException(BaseExceptionType.DOC_NOT_FOUND);
+            throw new BaseException(DocExceptionType.DOC_NOT_FOUND);
         }
 
         return docRequests.stream()
@@ -56,7 +56,7 @@ public class DocRequestService {
     public DocReqResponseDto createDocReq(Long docId, DocReqRequestDto docReqRequestDto, String originalFileName, String externalUrl, HttpSession session) {
         Member member = sessionService.validateSession(session);
         Doc doc = docRepository.findById(docId)
-                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(DocExceptionType.DOC_NOT_FOUND));
 
         String fileUrl = fileService.determineFileUrl(externalUrl, session);
         String storedFileName = (originalFileName != null && !originalFileName.isBlank()) ? originalFileName : fileUrl;
@@ -81,7 +81,7 @@ public class DocRequestService {
     public DocReqResponseDto updateDocReq(Long reqId, DocReqRequestDto docReqRequestDto, String originalFileName, String externalUrl, HttpSession session) {
         sessionService.validateSession(session);
         DocRequest docRequest = docReqRepository.findById(reqId)
-                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(DocExceptionType.DOC_NOT_FOUND));
 
         String fileUrl = fileService.determineFileUrl(externalUrl, session);
         String storedFileName = (originalFileName != null && !originalFileName.isBlank()) ? originalFileName : fileUrl;
@@ -96,7 +96,7 @@ public class DocRequestService {
 
     public void deleteDocReq(Long reqId) {
         DocRequest docRequest = docReqRepository.findById(reqId)
-                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(DocExceptionType.DOC_NOT_FOUND));
 
         fileService.deleteFileIfInternal(docRequest.getFileUrl());
         docReqRepository.delete(docRequest);
@@ -107,7 +107,7 @@ public class DocRequestService {
         sessionService.validateTeamLeader(session);
 
         DocRequest docRequest = docReqRepository.findById(reqId)
-                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(DocExceptionType.DOC_NOT_FOUND));
 
         docRequest.changeStatus(newStatus);
 
@@ -132,7 +132,7 @@ public class DocRequestService {
     public String getFilePath(Long reqId, HttpSession session) {
         sessionService.validateSession(session);
         DocRequest docRequest = docReqRepository.findById(reqId)
-                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
+                .orElseThrow(() -> new BaseException(DocExceptionType.DOC_NOT_FOUND));
         return docRequest.getFileUrl();
     }
 }
