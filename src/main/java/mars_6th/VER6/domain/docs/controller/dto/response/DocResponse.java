@@ -4,6 +4,7 @@ import mars_6th.VER6.domain.docs.entity.Doc;
 import mars_6th.VER6.global.utils.TimeUtils;
 
 public record DocResponse(
+        Long docId,
         String title,
         String fileName,
         Long currentRequestStep,
@@ -12,9 +13,9 @@ public record DocResponse(
         String timeAgo
 ) {
     public static DocResponse of(Doc doc, Long currentStep, Long totalStep) {
-        Double completion = (double) currentStep / totalStep * 100;
+        Double completion = totalStep != 0 ? (double) currentStep / totalStep * 100 : 0.0;
         String timeAgo = TimeUtils.timeAgo(doc.getCreatedAt());
 
-        return new DocResponse(doc.getTitle(), doc.getFileName(), currentStep, totalStep, completion, timeAgo);
+        return new DocResponse(doc.getId(), doc.getTitle(), doc.getFileName(), currentStep, totalStep, completion, timeAgo);
     }
 }

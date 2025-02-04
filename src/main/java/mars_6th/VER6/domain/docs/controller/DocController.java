@@ -2,6 +2,7 @@ package mars_6th.VER6.domain.docs.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import mars_6th.VER6.domain.docs.controller.dto.request.DocRequestDto;
@@ -27,8 +28,10 @@ public class DocController {
 
     @Operation(summary = "문서 생성 API")
     @PostMapping
-    public ResponseEntity<?> createDoc(@Valid @RequestBody DocRequestDto request) {
-        return ResponseEntity.ok(docService.createDoc(request));
+    public ResponseEntity<?> createDoc(
+            @Valid @RequestBody DocRequestDto request,
+            HttpSession session) {
+        return ResponseEntity.ok(docService.createDoc(request, session));
     }
 
     @Operation(summary = "문서 수정 API")
@@ -44,9 +47,4 @@ public class DocController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<?> test() {
-        throw new BaseException(DocExceptionType.DUPLICATED_DOC_TYPE);
-//        return ResponseEntity.ok().build();
-    }
 }
