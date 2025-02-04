@@ -11,10 +11,10 @@ import mars_6th.VER6.domain.docs.controller.dto.response.DocReqResponseDto;
 import mars_6th.VER6.domain.docs.controller.dto.response.StatusCountDto;
 import mars_6th.VER6.domain.docs.entity.DocRequestStatus;
 import mars_6th.VER6.domain.docs.service.DocRequestService;
-import org.springframework.http.MediaType;
+import mars_6th.VER6.domain.minio.service.FileService;
+import mars_6th.VER6.global.response.BaseResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -25,6 +25,7 @@ import java.util.List;
 public class DocRequestController {
 
     private final DocRequestService docRequestService;
+    private final FileService fileService;
 
     @Operation(summary = "문서 요청 리스트 조회 API")
     @GetMapping("/{docId}")
@@ -34,28 +35,28 @@ public class DocRequestController {
     }
 
     @Operation(summary = "문서 요청 생성 API")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/create")
     public ResponseEntity<DocReqResponseDto> createDocRequest(
             @RequestParam Long docId,
-            @RequestPart @Valid DocReqRequestDto docReqRequestDto,
-            @RequestPart(required = false) MultipartFile file,
-            @RequestParam(required = false) String url,
+            @RequestParam(required = false) String externalUrl,
+            @RequestParam(required = false) String originalFileName,
+            @RequestBody @Valid DocReqRequestDto docReqRequestDto,
             HttpServletRequest request) {
         HttpSession session = request.getSession();
-        DocReqResponseDto response = docRequestService.createDocReq(docId, docReqRequestDto, file, url, session);
+        DocReqResponseDto response = docRequestService.createDocReq(docId, docReqRequestDto, originalFileName, externalUrl, session);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "문서 요청 수정 API")
-    @PutMapping(value = "/{reqId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping("/{reqId}/update")
     public ResponseEntity<DocReqResponseDto> updateDocRequest(
             @PathVariable Long reqId,
-            @RequestPart @Valid DocReqRequestDto docReqRequestDto,
-            @RequestPart(required = false) MultipartFile file,
-            @RequestParam(required = false) String url,
+            @RequestParam(required = false) String externalUrl,
+            @RequestParam(required = false) String originalFileName,
+            @RequestBody @Valid DocReqRequestDto docReqRequestDto,
             HttpServletRequest request) {
         HttpSession session = request.getSession();
-        DocReqResponseDto response = docRequestService.updateDocReq(reqId, docReqRequestDto, file, url, session);
+        DocReqResponseDto response = docRequestService.updateDocReq(reqId, docReqRequestDto, originalFileName, externalUrl, session);
         return ResponseEntity.ok(response);
     }
 
@@ -78,9 +79,19 @@ public class DocRequestController {
     }
 
     @Operation(summary = "문서 요쳥 상태별 개수 API")
-    @GetMapping("/status-counts")
+    @GetMapping("/status/counts")
     public ResponseEntity<List<StatusCountDto>> getRequestCountsByStatus() {
         List<StatusCountDto> statusCounts = docRequestService.getRequestCountsByStatus();
         return ResponseEntity.ok(statusCounts);
+    }
+
+    @Operation(summary = "문서 요청 파일 다운로드 API")
+    @GetMapping("/{reqId}/download")
+    public ResponseEntity<BaseResponse<String>> downloadDocRequest(@PathVariable Long reqId, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        String filePath = docRequestService.getFilePath(reqId, session);
+        String downloadUrl = fileService.getDownloadUrl(filePath);
+        BaseResponse<String> response = new BaseResponse<>(downloadUrl);
+        return ResponseEntity.ok(response);
     }
 }

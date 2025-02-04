@@ -9,20 +9,21 @@ import lombok.RequiredArgsConstructor;
 import mars_6th.VER6.domain.docs.controller.dto.request.DeDocRequestDto;
 import mars_6th.VER6.domain.docs.controller.dto.response.DeResponseDto;
 import mars_6th.VER6.domain.docs.service.DocDetailService;
-import org.springframework.http.MediaType;
+import mars_6th.VER6.domain.minio.service.FileService;
+import mars_6th.VER6.global.response.BaseResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @Tag(name = "문서 상세 조회 컨트롤러", description = "Detail Docs API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/docs/detail")
+@RequestMapping("/docs-detail")
 public class DocDetailController {
 
     private final DocDetailService docDetailService;
+    private final FileService fileService;
 
     @Operation(summary = "문서 종류별 리스트 조회 API")
     @GetMapping("/{docTitle}")
@@ -32,28 +33,28 @@ public class DocDetailController {
     }
 
     @Operation(summary = "문서 종류별 리스트 추가 API")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/create")
     public ResponseEntity<DeResponseDto> createDeDoc(
             @RequestParam Long docId,
-            @RequestPart @Valid DeDocRequestDto docRequestDto,
-            @RequestPart(required = false) MultipartFile file,
-            @RequestParam(required = false) String url,
+            @RequestParam(required = false) String externalUrl,
+            @RequestParam(required = false) String originalFileName,
+            @RequestBody @Valid DeDocRequestDto docRequestDto,
             HttpServletRequest request) {
         HttpSession session = request.getSession();
-        DeResponseDto response = docDetailService.createDeDoc(docId, docRequestDto, file, url, session);
+        DeResponseDto response = docDetailService.createDeDoc(docId, docRequestDto, originalFileName, externalUrl, session);
         return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "문서 종류별 리스트 수정 API")
-    @PutMapping(value = "/{docId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/{docId}/update")
     public ResponseEntity<DeResponseDto> updateDeDoc(
             @PathVariable Long docId,
-            @RequestPart @Valid DeDocRequestDto docRequestDto,
-            @RequestPart(required = false) MultipartFile file,
-            @RequestParam(required = false) String url,
+            @RequestParam(required = false) String externalUrl,
+            @RequestParam(required = false) String originalFileName,
+            @RequestBody @Valid DeDocRequestDto docRequestDto,
             HttpServletRequest request) {
         HttpSession session = request.getSession();
-        DeResponseDto response = docDetailService.updateDeDoc(docId, docRequestDto, file, url, session);
+        DeResponseDto response = docDetailService.updateDeDoc(docId, docRequestDto, originalFileName, externalUrl, session);
         return ResponseEntity.ok(response);
     }
 
@@ -63,5 +64,15 @@ public class DocDetailController {
         HttpSession session = request.getSession();
         docDetailService.deleteDoc(id, session);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "문서 다운로드 API")
+    @GetMapping("/{docId}/download")
+    public ResponseEntity<BaseResponse<String>> downloadDeDoc(@PathVariable Long docId, HttpServletRequest request) {
+        HttpSession session = request.getSession();
+        String filePath = docDetailService.getFilePath(docId, session);
+        String downloadUrl = fileService.getDownloadUrl(filePath);
+        BaseResponse<String> response = new BaseResponse<>(downloadUrl);
+        return ResponseEntity.ok(response);
     }
 }

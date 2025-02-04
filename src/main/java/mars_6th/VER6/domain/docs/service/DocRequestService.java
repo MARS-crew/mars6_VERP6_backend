@@ -12,14 +12,12 @@ import mars_6th.VER6.domain.docs.entity.DocRequestStatus;
 import mars_6th.VER6.domain.docs.repo.DocRepository;
 import mars_6th.VER6.domain.docs.repo.DocReqRepository;
 import mars_6th.VER6.domain.member.entity.Member;
-import mars_6th.VER6.domain.member.entity.MemberRole;
-import mars_6th.VER6.domain.member.exception.MemberExceptionType;
-import mars_6th.VER6.domain.member.repo.MemberRepository;
+import mars_6th.VER6.domain.minio.service.FileService;
+import mars_6th.VER6.domain.minio.service.SessionService;
 import mars_6th.VER6.global.exception.BaseException;
 import mars_6th.VER6.global.exception.BaseExceptionType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -31,11 +29,10 @@ public class DocRequestService {
 
     private final DocRepository docRepository;
     private final DocReqRepository docReqRepository;
-    private final MemberRepository memberRepository;
-    private final MinioService minioService;
+    private final FileService fileService;
+    private final SessionService sessionService;
 
     public List<DocReqResponseDto> getDocReq(Long docId) {
-
         Doc doc = docRepository.findById(docId)
                 .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
@@ -45,7 +42,7 @@ public class DocRequestService {
             throw new BaseException(BaseExceptionType.DOC_NOT_FOUND);
         }
 
-        return doc.getDocRequest().stream()
+        return docRequests.stream()
                 .map(docReq -> new DocReqResponseDto(
                         docReq.getContent(),
                         docReq.getFileName(),
@@ -56,140 +53,86 @@ public class DocRequestService {
                 .toList();
     }
 
-    public DocReqResponseDto createDocReq(Long docId, DocReqRequestDto docReqRequestDto, MultipartFile file, String url, HttpSession session) {
-
-        Long userId = (Long) session.getAttribute("id");
-
-        if (userId == null) {
-            throw new BaseException(MemberExceptionType.NOT_FOUND_MEMBER);
-        }
-
-        Member member = memberRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(MemberExceptionType.NOT_FOUND_MEMBER));
-
+    public DocReqResponseDto createDocReq(Long docId, DocReqRequestDto docReqRequestDto, String originalFileName, String externalUrl, HttpSession session) {
+        Member member = sessionService.validateSession(session);
         Doc doc = docRepository.findById(docId)
                 .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
-        String fileUrl = null;
+        String fileUrl = fileService.determineFileUrl(externalUrl, session);
+        String storedFileName = (originalFileName != null && !originalFileName.isBlank()) ? originalFileName : fileUrl;
 
-        if (file != null && !file.isEmpty()) {
-            fileUrl = minioService.uploadFile(file);
-        }
-
-        if (url != null && !url.isEmpty()) {
-            fileUrl = url;
-        }
-
-        log.info("유저 이름: " + member.getName());
-        log.info("유저 아이디: " + member.getUsername());
         DocRequest docRequest = DocRequest.builder()
                 .doc(doc)
                 .createdBy(member.getId())
                 .name(member.getName())
                 .title(doc.getVersion() + " " + doc.getFileName())
                 .content(docReqRequestDto.getContent())
-                .fileName(file != null ? file.getOriginalFilename() : url)
+                .fileName(storedFileName)
                 .fileUrl(fileUrl)
                 .status(DocRequestStatus.REQUESTED)
                 .build();
 
         docReqRepository.save(docRequest);
-
-        return new DocReqResponseDto(
-                docRequest.getContent(),
-                docRequest.getFileName(),
-                docRequest.getStatus(),
-                docRequest.getName(),
-                docRequest.getCreatedAt().toLocalDate()
-        );
+        log.info("문서 요청 생성 성공: {}", docRequest);
+        return toResponseDto(docRequest);
     }
 
-    public DocReqResponseDto updateDocReq(Long reqId, DocReqRequestDto docReqRequestDto, MultipartFile file, String url, HttpSession session) {
 
-        Long userId = (Long) session.getAttribute("id");
-
-        if (userId == null) {
-            throw new BaseException(MemberExceptionType.NOT_FOUND_MEMBER);
-        }
-
-        Member member = memberRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(MemberExceptionType.NOT_FOUND_MEMBER));
-
+    public DocReqResponseDto updateDocReq(Long reqId, DocReqRequestDto docReqRequestDto, String originalFileName, String externalUrl, HttpSession session) {
+        sessionService.validateSession(session);
         DocRequest docRequest = docReqRepository.findById(reqId)
                 .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
-        String fileUrl = null;
+        String fileUrl = fileService.determineFileUrl(externalUrl, session);
+        String storedFileName = (originalFileName != null && !originalFileName.isBlank()) ? originalFileName : fileUrl;
 
-        if (file != null && !file.isEmpty()) {
-            fileUrl = minioService.uploadFile(file);
-            docRequest.updateFileName(file.getOriginalFilename());
-        }
-
-        if (url != null && !url.isEmpty()) {
-            fileUrl = url;
-            docRequest.updateFileName(url);
-        }
-
-        if (fileUrl != null) {
-            docRequest.updateFileUrl(fileUrl);
-        }
-
-        docRequest.updateName(member.getUsername());
+        docRequest.updateFileUrl(fileUrl);
+        docRequest.updateFileName(storedFileName);
         docRequest.updateContent(docReqRequestDto.getContent());
 
-
-        docReqRepository.save(docRequest);
-
-        return new DocReqResponseDto(
-                docRequest.getContent(),
-                docRequest.getFileName(),
-                docRequest.getStatus(),
-                docRequest.getName(),
-                docRequest.getCreatedAt().toLocalDate()
-        );
+        log.info("문서 요청 업데이트 성공: {}", docRequest);
+        return toResponseDto(docRequest);
     }
 
     public void deleteDocReq(Long reqId) {
         DocRequest docRequest = docReqRepository.findById(reqId)
                 .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
-        if (docRequest.getFileUrl() != null && !docRequest.getFileUrl().isEmpty() && !minioService.isExternalUrl(docRequest.getFileUrl())) {
-            minioService.deleteFile(docRequest.getFileUrl());
-        }
-
+        fileService.deleteFileIfInternal(docRequest.getFileUrl());
         docReqRepository.delete(docRequest);
+        log.info("문서 요청 삭제 성공: {}", reqId);
     }
 
     public DocReqResponseDto changeDocReqStatus(Long reqId, DocRequestStatus newStatus, HttpSession session) {
-
-        Long userId = (Long) session.getAttribute("id");
-        if (userId == null) {
-            throw new BaseException(MemberExceptionType.NOT_FOUND_MEMBER);
-        }
-        Member member = memberRepository.findById(userId)
-                .orElseThrow(() -> new BaseException(MemberExceptionType.NOT_FOUND_MEMBER));
-
-        if (member.getRole() != MemberRole.TEAM_LEADER) {
-            throw new BaseException(MemberExceptionType.NOT_PERMISSION);
-        }
+        sessionService.validateTeamLeader(session);
 
         DocRequest docRequest = docReqRepository.findById(reqId)
                 .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
 
         docRequest.changeStatus(newStatus);
 
-        docReqRepository.save(docRequest);
-
-        return new DocReqResponseDto(
-                docRequest.getContent(),
-                docRequest.getFileName(),
-                docRequest.getStatus(),
-                docRequest.getName(),
-                docRequest.getCreatedAt().toLocalDate()
-        );
+        log.info("문서 요청 상태 변경 성공: {}, 새로운 상태: {}", reqId, newStatus);
+        return toResponseDto(docRequest);
     }
 
     public List<StatusCountDto> getRequestCountsByStatus() {
         return docReqRepository.getRequestCountsByStatus();
+    }
+
+    private DocReqResponseDto toResponseDto(DocRequest request) {
+        return new DocReqResponseDto(
+                request.getContent(),
+                request.getFileName(),
+                request.getStatus(),
+                request.getName(),
+                request.getCreatedAt().toLocalDate()
+        );
+    }
+
+    public String getFilePath(Long reqId, HttpSession session) {
+        sessionService.validateSession(session);
+        DocRequest docRequest = docReqRepository.findById(reqId)
+                .orElseThrow(() -> new BaseException(BaseExceptionType.DOC_NOT_FOUND));
+        return docRequest.getFileUrl();
     }
 }
