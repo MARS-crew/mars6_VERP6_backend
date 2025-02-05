@@ -20,7 +20,7 @@ public class Doc extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "doc_type_id")
+    @JoinColumn(name = "tbl_doc_type_id")
     private DocType docType;
 
     @OneToMany(mappedBy = "doc", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

@@ -1,5 +1,8 @@
 package mars_6th.VER6.domain.minio.service;
 
+import io.minio.BucketExistsArgs;
+import io.minio.MinioClient;
+import io.minio.errors.*;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,13 +11,27 @@ import mars_6th.VER6.domain.minio.dto.PresignedUrlResponseDto;
 import mars_6th.VER6.global.exception.BaseException;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class FileService {
+
+    private final MinioClient minioClient;
     private final MinioService minioService;
 
-    public PresignedUrlResponseDto generatePresignedUploadUrl(HttpSession session) {
+    public PresignedUrlResponseDto generatePresignedUploadUrl(HttpSession session) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
+        boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket("ver6").build());
+
+        if (found) {
+            System.out.println("존재");
+        } else {
+            System.out.println("미존재");
+        }
+
         String generatedFileName = System.currentTimeMillis() + "_" + java.util.UUID.randomUUID().toString();
         session.setAttribute("generatedFileName", generatedFileName);
         String presignedUrl = minioService.getPresignedUploadUrl(generatedFileName, 10);

@@ -11,13 +11,14 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@Table(name = "tbl_doc_type")
 public class DocType extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(mappedBy = "docType")
+    @OneToMany(mappedBy = "docType", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Doc> docs;
 
     @Column(unique = true)
