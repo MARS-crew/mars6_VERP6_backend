@@ -20,7 +20,7 @@ public class Doc extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "doc_type_id")
+    @JoinColumn(name = "tbl_doc_type_id")
     private DocType docType;
 
     @OneToMany(mappedBy = "doc", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -37,6 +37,9 @@ public class Doc extends BaseEntity {
     private String fileUrl;
 
     private Long createdBy;
+
+    @Builder.Default
+    private boolean isUpdated = false;
 
     public void addDocType(DocType docType) {
         this.docType = docType;
@@ -66,5 +69,13 @@ public class Doc extends BaseEntity {
     public Doc updateFileUrl(String fileUrl) {
         this.fileUrl = fileUrl;
         return this;
+    }
+
+    public void markAsUpdated() {
+        this.isUpdated = true;
+    }
+
+    public void markAsRead() {
+        this.isUpdated = false;
     }
 }

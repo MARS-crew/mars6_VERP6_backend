@@ -74,6 +74,9 @@ public class DocRequestService {
 
         docReqRepository.save(docRequest);
         log.info("문서 요청 생성 성공: {}", docRequest);
+
+        doc.markAsUpdated();
+
         return toResponseDto(docRequest);
     }
 
