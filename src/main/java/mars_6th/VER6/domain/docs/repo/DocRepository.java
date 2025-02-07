@@ -22,7 +22,8 @@ public interface DocRepository extends JpaRepository <Doc, Long> {
                 .toList();
     }
 
-    List<Doc> findByTitle(String title);
+    @Query("SELECT d FROM Doc d WHERE d.title = :title AND d.version IS NOT NULL AND d.content IS NOT NULL")
+    List<Doc> findByTitleAndNotNullFields(String title);
 
     boolean existsByIsUpdatedTrueAndId(Long docId);
 }
