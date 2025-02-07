@@ -35,28 +35,35 @@ public class DocController {
     }
 
     @Operation(summary = "문서 수정 API")
-    @PutMapping("/{id}")
+    @PutMapping("/{docId}")
     public ResponseEntity<?> updateDoc(
-            @PathVariable Long id,
+            @PathVariable Long docId,
             @Valid @RequestBody DocRequestDto request,
             HttpSession session) {
         sessionService.validateTeamLeader(session);
-        return ResponseEntity.ok(docService.updateDoc(id, request));
+        return ResponseEntity.ok(docService.updateDoc(docId, request));
     }
 
     @Operation(summary = "문서 삭제 API")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteDoc(@PathVariable Long id, HttpSession session) {
+    @DeleteMapping("/{docId}")
+    public ResponseEntity<?> deleteDoc(@PathVariable Long docId, HttpSession session) {
         sessionService.validateTeamLeader(session);
-        docService.deleteDoc(id);
+        docService.deleteDoc(docId);
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "문서 알림 읽기 API", description = "문서 알림을 읽음 처리합니다.")
-    @PostMapping("/{id}/read")
-    public ResponseEntity<?> readDoc(@PathVariable Long id, HttpSession session) {
+    @Operation(summary = "문서 알림 읽기 API", description = "읽지 않은 요청이 있는지 가져옵니다.")
+    @GetMapping("/{docId}/has-unread")
+    public ResponseEntity<?> hasUnreadDoc(@PathVariable Long docId, HttpSession session) {
         sessionService.validateSession(session);
-        docService.readDoc(id);
+        return ResponseEntity.ok(docService.hasUnreadDoc(docId));
+    }
+
+    @Operation(summary = "문서 알림 읽기 API", description = "문서 요청 알림을 읽음 처리합니다.")
+    @PostMapping("/{docId}/read")
+    public ResponseEntity<?> readDoc(@PathVariable Long docId, HttpSession session) {
+        sessionService.validateSession(session);
+        docService.readDoc(docId);
         return ResponseEntity.ok().build();
     }
 }

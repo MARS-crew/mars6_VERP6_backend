@@ -74,4 +74,8 @@ public class DocService {
         Doc doc = docRepository.getById(id);
         doc.markAsRead();
     }
+
+    public boolean hasUnreadDoc(Long id) {
+        return docRepository.existsByIsUpdatedTrueAndId(id);
+    }
 }
