@@ -38,6 +38,9 @@ public class Doc extends BaseEntity {
 
     private Long createdBy;
 
+    @Builder.Default
+    private boolean isUpdated = false;
+
     public void addDocType(DocType docType) {
         this.docType = docType;
         docType.getDocs().add(this);
@@ -66,5 +69,13 @@ public class Doc extends BaseEntity {
     public Doc updateFileUrl(String fileUrl) {
         this.fileUrl = fileUrl;
         return this;
+    }
+
+    public void markAsUpdated() {
+        this.isUpdated = true;
+    }
+
+    public void markAsRead() {
+        this.isUpdated = false;
     }
 }

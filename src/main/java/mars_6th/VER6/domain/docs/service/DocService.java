@@ -69,4 +69,9 @@ public class DocService {
         Doc doc = docRepository.getById(id);
         docRepository.delete(doc);
     }
+
+    public void readDoc(Long id) {
+        Doc doc = docRepository.getById(id);
+        doc.markAsRead();
+    }
 }
