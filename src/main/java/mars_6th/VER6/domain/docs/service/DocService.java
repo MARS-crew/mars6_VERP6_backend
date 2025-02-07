@@ -13,6 +13,7 @@ import mars_6th.VER6.domain.docs.repo.DocReqRepository;
 import mars_6th.VER6.domain.docs.repo.DocTypeRepository;
 import mars_6th.VER6.domain.member.entity.Member;
 import mars_6th.VER6.domain.minio.service.SessionService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,11 +32,7 @@ public class DocService {
 
     public List<DocResponse> getDocs(Long docTypeId) {
         List<Doc> docs = docRepository.getDocsByDocType(docTypeId);
-        return docs.stream().map(doc -> {
-            long totalCount = docReqRepository.countByDoc(doc);
-            long completedCount = docReqRepository.countByCompleted(doc, DocRequestStatus.COMPLETED);
-            return DocResponse.of(doc, completedCount, totalCount);
-        }).toList();
+        return docs.stream().map(this::getDocResponse).toList();
     }
 
     public DocResponse createDoc(DocRequestDto request, HttpSession session) {
@@ -49,20 +46,14 @@ public class DocService {
 
         doc.addDocType(docType);
 
-        long totalCount = docReqRepository.countByDoc(doc);
-        long completedCount = docReqRepository.countByCompleted(doc, DocRequestStatus.COMPLETED);
-
-        return DocResponse.of(doc, completedCount, totalCount);
+        return getDocResponse(doc);
     }
 
     public DocResponse updateDoc(Long id, DocRequestDto request) {
         Doc doc = docRepository.getById(id);
         doc.updateName(request.title());
 
-        long totalCount = docReqRepository.countByDoc(doc);
-        long completedCount = docReqRepository.countByCompleted(doc, DocRequestStatus.COMPLETED);
-
-        return DocResponse.of(doc, completedCount, totalCount);
+        return getDocResponse(doc);
     }
 
     public void deleteDoc(Long id) {
@@ -77,5 +68,14 @@ public class DocService {
 
     public boolean hasUnreadDoc(Long id) {
         return docRepository.existsByIsUpdatedTrueAndId(id);
+    }
+
+    @NotNull
+    private DocResponse getDocResponse(Doc doc) {
+        long totalCount = docReqRepository.countByDoc(doc);
+        long completedCount = docReqRepository.countByStatus(doc, DocRequestStatus.COMPLETED);
+        long inProgressCount = docReqRepository.countByStatus(doc, DocRequestStatus.IN_PROGRESS);
+        long canceledCount = docReqRepository.countByStatus(doc, DocRequestStatus.CANCELED);
+        return DocResponse.of(doc, completedCount + canceledCount, inProgressCount, totalCount);
     }
 }
