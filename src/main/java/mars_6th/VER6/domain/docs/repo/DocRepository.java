@@ -4,6 +4,7 @@ import mars_6th.VER6.domain.docs.entity.Doc;
 import mars_6th.VER6.domain.docs.exception.DocExceptionType;
 import mars_6th.VER6.global.exception.BaseException;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -22,4 +23,6 @@ public interface DocRepository extends JpaRepository <Doc, Long> {
     }
 
     List<Doc> findByTitle(String title);
+
+    boolean existsByIsUpdatedTrueAndId(Long docId);
 }
