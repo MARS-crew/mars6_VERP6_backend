@@ -10,6 +10,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class DocReqResponseDto {
 
+    private Long reqId;
     private String content;
     private String fileName;
     private DocRequestStatus status;

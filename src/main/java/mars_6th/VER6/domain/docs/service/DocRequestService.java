@@ -44,6 +44,7 @@ public class DocRequestService {
 
         return docRequests.stream()
                 .map(docReq -> new DocReqResponseDto(
+                        docReq.getId(),
                         docReq.getContent(),
                         docReq.getFileName(),
                         docReq.getStatus(),
@@ -124,6 +125,7 @@ public class DocRequestService {
 
     private DocReqResponseDto toResponseDto(DocRequest request) {
         return new DocReqResponseDto(
+                request.getId(),
                 request.getContent(),
                 request.getFileName(),
                 request.getStatus(),
