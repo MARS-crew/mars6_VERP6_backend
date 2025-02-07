@@ -29,7 +29,7 @@ public class DocDetailService {
 
 
     public List<DeResponseDto> getDeDocs(String docTitle) {
-        List<Doc> docs = docRepository.findByTitle(docTitle);
+        List<Doc> docs = docRepository.findByTitleAndNotNullFields(docTitle);
         if (docs.isEmpty()) {
             throw new BaseException(DocExceptionType.DOC_NOT_FOUND);
         }
