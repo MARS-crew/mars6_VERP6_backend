@@ -59,10 +59,10 @@ public class DocDetailController {
     }
 
     @Operation(summary = "문서 종류별 리스트 삭제 API")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDeDoc(@PathVariable Long id, HttpServletRequest request) {
+    @DeleteMapping("/{docId}")
+    public ResponseEntity<Void> deleteDeDoc(@PathVariable Long docId, HttpServletRequest request) {
         HttpSession session = request.getSession();
-        docDetailService.deleteDoc(id, session);
+        docDetailService.deleteDoc(docId, session);
         return ResponseEntity.noContent().build();
     }
 

@@ -36,8 +36,10 @@ public class DocDetailService {
 
         return docs.stream()
                 .map(doc -> new DeResponseDto(
+                        doc.getId(),
                         doc.getVersion(),
                         doc.getFileName(),
+                        doc.getContent(),
                         doc.getCreatedAt().toLocalDate()
                 ))
                 .toList();
@@ -63,7 +65,7 @@ public class DocDetailService {
 
         docRepository.save(newDoc);
         log.info("문서 생성 성공: {}", newDoc);
-        return new DeResponseDto(newDoc.getVersion(), newDoc.getFileName(), newDoc.getCreatedAt().toLocalDate());
+        return new DeResponseDto(newDoc.getId(), newDoc.getVersion(), newDoc.getFileName(), newDoc.getContent(), newDoc.getCreatedAt().toLocalDate());
     }
 
     public DeResponseDto updateDeDoc(Long docId, DeDocRequestDto deDocRequestDto, String originalFileName, String externalUrl, HttpSession session) {
@@ -80,7 +82,7 @@ public class DocDetailService {
         doc.updateContent(deDocRequestDto.getContent());
 
         log.info("문서 업데이트 성공: {}", doc);
-        return new DeResponseDto(doc.getVersion(), doc.getFileName(), doc.getCreatedAt().toLocalDate());
+        return new DeResponseDto(doc.getId(), doc.getVersion(), doc.getFileName(), doc.getContent(), doc.getCreatedAt().toLocalDate());
     }
 
     public void deleteDoc(Long docId, HttpSession session) {
