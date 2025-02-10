@@ -9,12 +9,13 @@ public record DocResponse(
         String fileName,
         Long completedRequestStep,
         Long inProgressRequestStep,
+        Long canceledRequestStep,
         Long totalRequestStep,
-        Double completion,
         String timeAgo
 ) {
-    public static DocResponse of(Doc doc, Long completedRequestStep, Long inProgressRequestStep, Long totalRequestStep) {
-        Double completion = totalRequestStep != 0 ? (double) completedRequestStep / totalRequestStep * 100 : 0.0;
+    public static DocResponse of(Doc doc, Long completedRequestStep,
+                                 Long inProgressRequestStep, Long canceledRequestStep,
+                                 Long totalRequestStep) {
         String timeAgo = TimeUtils.timeAgo(doc.getCreatedAt());
 
         return new DocResponse(
@@ -23,8 +24,8 @@ public record DocResponse(
                 doc.getFileName(),
                 completedRequestStep,
                 inProgressRequestStep,
+                canceledRequestStep,
                 totalRequestStep,
-                completion,
                 timeAgo);
     }
 }

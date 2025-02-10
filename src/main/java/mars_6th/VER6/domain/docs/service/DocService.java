@@ -76,6 +76,6 @@ public class DocService {
         long completedCount = docReqRepository.countByStatus(doc, DocRequestStatus.COMPLETED);
         long inProgressCount = docReqRepository.countByStatus(doc, DocRequestStatus.IN_PROGRESS);
         long canceledCount = docReqRepository.countByStatus(doc, DocRequestStatus.CANCELED);
-        return DocResponse.of(doc, completedCount + canceledCount, inProgressCount, totalCount);
+        return DocResponse.of(doc, completedCount, inProgressCount, canceledCount, totalCount);
     }
 }
