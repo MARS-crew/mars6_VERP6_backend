@@ -18,5 +18,5 @@ public interface DocReqRepository extends JpaRepository <DocRequest, Long> {
     long countByDoc(Doc doc);
 
     @Query("SELECT COUNT(dr.id) FROM DocRequest dr WHERE dr.doc = :doc AND dr.status = :status")
-    long countByCompleted(Doc doc, DocRequestStatus status);
+    long countByStatus(Doc doc, DocRequestStatus status);
 }
