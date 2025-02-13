@@ -18,7 +18,7 @@ public class DocType extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(mappedBy = "docType", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "docType", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Doc> docs;
 
     @Column(unique = true)
