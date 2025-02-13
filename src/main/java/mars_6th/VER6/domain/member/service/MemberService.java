@@ -19,17 +19,29 @@ public class MemberService {
 
     private final MemberRepository MemberRepository;
 
-    public MemberResponse login(MemberRequest req, HttpSession  session) {
-
-        //Null 확인
+    public MemberResponse signup(MemberRequest req, HttpSession session) {
         if (req.username() == null || req.username().isEmpty() || req.password() == null || req.password().isEmpty() )
             throw new BaseException(MemberExceptionType.EMPTY_USER_INFO);
 
-        //아이디 확인
+        if (MemberRepository.existsByUsername(req.username()))
+            throw new BaseException(MemberExceptionType.DUPLICATED_USERNAME);
+
+        Member member = req.toEntity();
+        MemberRepository.save(member);
+
+        session.setAttribute("id", member.getId());
+        session.setMaxInactiveInterval(1800);
+
+        return MemberResponse.from(member, session.getId());
+    }
+
+    public MemberResponse login(MemberRequest req, HttpSession session) {
+        if (req.username() == null || req.username().isEmpty() || req.password() == null || req.password().isEmpty() )
+            throw new BaseException(MemberExceptionType.EMPTY_USER_INFO);
+
         Member member = MemberRepository.findByUsername(req.username())
                 .orElseThrow(() -> new BaseException(MemberExceptionType.INVALID_CREDENTIALS));
 
-        //패스워드 확인
         if (!member.getPassword().equals(req.password()))
             throw new BaseException(MemberExceptionType.INVALID_CREDENTIALS);
 

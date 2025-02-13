@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import mars_6th.VER6.global.utils.BaseEntity;
 
-import java.util.List;
-
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Getter
@@ -20,45 +18,25 @@ public class DocRequest extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "doc_id")
+    @JoinColumn(name = "tbl_doc_id")
     private Doc doc;
-
-    private String name;
 
     private String title;
 
     private String content;
 
-    private String fileName;
-
-    private String fileUrl;
+    private String assignee; // 요청 담당자
 
     @Enumerated(EnumType.STRING)
     private DocRequestStatus status;
 
-    private Long createdBy;
-
-    public void changeStatus(DocRequestStatus newStatus) {
-        this.status = newStatus;
+    public void addDoc(Doc doc) {
+        this.doc = doc;
+        doc.getDocRequests().add(this);
     }
 
-    public DocRequest updateFileName(String fileName) {
-        this.fileName = fileName;
-        return this;
+    public void updateStatus(DocRequestStatus status) {
+        this.status = status;
     }
 
-    public DocRequest updateFileUrl(String fileUrl) {
-        this.fileUrl = fileUrl;
-        return this;
-    }
-
-    public DocRequest updateContent(String content) {
-        this.content = content;
-        return this;
-    }
-
-    public DocRequest updateName(String name) {
-        this.name = name;
-        return this;
-    }
 }

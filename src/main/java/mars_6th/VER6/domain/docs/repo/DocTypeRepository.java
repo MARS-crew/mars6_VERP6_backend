@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DocTypeRepository extends JpaRepository<DocType, Long> {
 
-    default DocType getById(Long id) {
+    default DocType getDocTypeById(Long id) {
         return findById(id).orElseThrow(
                 () -> new BaseException(DocExceptionType.NOT_FOUND_DOC_TYPE)
         );

@@ -1,19 +1,17 @@
 package mars_6th.VER6.domain.docs.service;
 
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import mars_6th.VER6.domain.docs.controller.dto.request.DocRequestDto;
 import mars_6th.VER6.domain.docs.controller.dto.response.DocResponse;
 import mars_6th.VER6.domain.docs.entity.Doc;
 import mars_6th.VER6.domain.docs.entity.DocRequestStatus;
 import mars_6th.VER6.domain.docs.entity.DocType;
+import mars_6th.VER6.domain.docs.exception.DocExceptionType;
+import mars_6th.VER6.domain.docs.repo.DocDetailRepository;
 import mars_6th.VER6.domain.docs.repo.DocRepository;
 import mars_6th.VER6.domain.docs.repo.DocReqRepository;
 import mars_6th.VER6.domain.docs.repo.DocTypeRepository;
-import mars_6th.VER6.domain.member.entity.Member;
-import mars_6th.VER6.domain.minio.service.SessionService;
-import org.jetbrains.annotations.NotNull;
+import mars_6th.VER6.global.exception.BaseException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,60 +20,69 @@ import java.util.List;
 @Service
 @Transactional
 @RequiredArgsConstructor
-@Slf4j
 public class DocService {
 
     private final DocRepository docRepository;
+    private final DocDetailRepository docDetailRepository;
     private final DocTypeRepository docTypeRepository;
     private final DocReqRepository docReqRepository;
-    private final SessionService sessionService;
 
     public List<DocResponse> getDocs(Long docTypeId) {
-        List<Doc> docs = docRepository.getDocsByDocType(docTypeId);
-        return docs.stream().map(this::getDocResponse).toList();
+        List<Doc> docs = docRepository.findAllByDocTypeId(docTypeId);
+
+        return docs.stream()
+                .map(this::getDocResponse)
+                .toList();
     }
 
-    public DocResponse createDoc(DocRequestDto request, HttpSession session) {
+    public DocResponse createDoc(DocRequestDto request) {
         Long docTypeId = request.docTypeId();
+        DocType docType = docTypeRepository.getDocTypeById(docTypeId);
 
-        DocType docType = docTypeRepository.getById(docTypeId);
+        if (docRepository.existsByTitle(request.title())) {
+            throw new BaseException(DocExceptionType.DUPLICATED_DOC);
+        }
 
-        Member member = sessionService.validateTeamLeader(session);
-        Doc entity = request.toEntity(member.getId());
-        Doc doc = docRepository.save(entity);
-
+        Doc doc = docRepository.save(request.toEntity());
         doc.addDocType(docType);
 
         return getDocResponse(doc);
     }
 
-    public DocResponse updateDoc(Long id, DocRequestDto request) {
-        Doc doc = docRepository.getById(id);
-        doc.updateName(request.title());
+    public DocResponse updateDoc(Long docId, DocRequestDto request) {
+        Doc doc = docRepository.getDocById(docId);
+
+        if (docRepository.existsByTitle(request.title())) {
+            throw new BaseException(DocExceptionType.DUPLICATED_DOC);
+        }
+        doc.updateTitle(request.title());
 
         return getDocResponse(doc);
     }
 
-    public void deleteDoc(Long id) {
-        Doc doc = docRepository.getById(id);
-        docRepository.delete(doc);
+    public void deleteDoc(Long docId) {
+        if (docRepository.existsById(docId)) {
+            throw new BaseException(DocExceptionType.NOT_FOUND_DOC);
+        }
+
+        docRepository.deleteById(docId);
     }
 
-    public void readDoc(Long id) {
-        Doc doc = docRepository.getById(id);
+    public void readDocAlarm(Long docId) {
+        Doc doc = docRepository.getDocById(docId);
         doc.markAsRead();
     }
 
-    public boolean hasUnreadDoc(Long id) {
-        return docRepository.existsByIsUpdatedTrueAndId(id);
+    public boolean hasUnreadDoc(Long docId) {
+        return docRepository.existsByIsUpdatedTrueAndId(docId);
     }
 
-    @NotNull
     private DocResponse getDocResponse(Doc doc) {
-        long totalCount = docReqRepository.countByDoc(doc);
-        long completedCount = docReqRepository.countByStatus(doc, DocRequestStatus.COMPLETED);
-        long inProgressCount = docReqRepository.countByStatus(doc, DocRequestStatus.IN_PROGRESS);
-        long canceledCount = docReqRepository.countByStatus(doc, DocRequestStatus.CANCELED);
-        return DocResponse.of(doc, completedCount, inProgressCount, canceledCount, totalCount);
+        String fileName = docDetailRepository.findFileName();
+        Long completedRequestStep = docReqRepository.countByStatus(doc, DocRequestStatus.COMPLETED);
+        Long inProgressRequestStep = docReqRepository.countByStatus(doc, DocRequestStatus.IN_PROGRESS);
+        Long pendingRequestStep = docReqRepository.countByStatus(doc, DocRequestStatus.PENDING);
+
+        return DocResponse.of(doc, fileName, completedRequestStep, inProgressRequestStep, pendingRequestStep);
     }
 }

@@ -20,7 +20,8 @@ public class DocController {
     private final DocService docService;
     private final SessionService sessionService;
 
-    @Operation(summary = "문서 조회 API")
+    @Operation(summary = "문서 조회 API", description = "문서를 조회합니다. \n" +
+            "상태: [COMPLETED, IN_PROGRESS, PENDING]")
     @GetMapping("/{docTypeId}")
     public ResponseEntity<?> getDocs(@PathVariable Long docTypeId) {
         return ResponseEntity.ok(docService.getDocs(docTypeId));
@@ -31,7 +32,8 @@ public class DocController {
     public ResponseEntity<?> createDoc(
             @Valid @RequestBody DocRequestDto request,
             HttpSession session) {
-        return ResponseEntity.ok(docService.createDoc(request, session));
+        sessionService.validateTeamLeader(session);
+        return ResponseEntity.ok(docService.createDoc(request));
     }
 
     @Operation(summary = "문서 수정 API")
@@ -61,9 +63,9 @@ public class DocController {
 
     @Operation(summary = "문서 알림 읽기 API", description = "문서 요청 알림을 읽음 처리합니다.")
     @PostMapping("/{docId}/read")
-    public ResponseEntity<?> readDoc(@PathVariable Long docId, HttpSession session) {
+    public ResponseEntity<?> readDocAlarm(@PathVariable Long docId, HttpSession session) {
         sessionService.validateSession(session);
-        docService.readDoc(docId);
+        docService.readDocAlarm(docId);
         return ResponseEntity.ok().build();
     }
 }

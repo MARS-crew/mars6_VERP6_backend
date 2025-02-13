@@ -9,23 +9,19 @@ public record DocResponse(
         String fileName,
         Long completedRequestStep,
         Long inProgressRequestStep,
-        Long canceledRequestStep,
-        Long totalRequestStep,
+        Long pendingRequestStep,
         String timeAgo
 ) {
-    public static DocResponse of(Doc doc, Long completedRequestStep,
-                                 Long inProgressRequestStep, Long canceledRequestStep,
-                                 Long totalRequestStep) {
-        String timeAgo = TimeUtils.timeAgo(doc.getCreatedAt());
-
+    public static DocResponse of(Doc doc, String fileName, Long completedRequestStep,
+                                 Long inProgressRequestStep, Long canceledRequestStep) {
         return new DocResponse(
                 doc.getId(),
                 doc.getTitle(),
-                doc.getFileName(),
+                fileName,
                 completedRequestStep,
                 inProgressRequestStep,
                 canceledRequestStep,
-                totalRequestStep,
-                timeAgo);
+                TimeUtils.timeAgo(doc.getCreatedAt()));
     }
 }
+

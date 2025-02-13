@@ -12,7 +12,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
 @Tag(name = "문서 타입(리스트) 조회 컨트롤러", description = "Docs Type API")
 @RestController
 @RequiredArgsConstructor

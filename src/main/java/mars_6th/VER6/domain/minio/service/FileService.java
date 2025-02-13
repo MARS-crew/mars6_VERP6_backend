@@ -1,69 +1,59 @@
 package mars_6th.VER6.domain.minio.service;
 
-import io.minio.BucketExistsArgs;
-import io.minio.MinioClient;
-import io.minio.errors.*;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import mars_6th.VER6.domain.docs.entity.DocDetail;
 import mars_6th.VER6.domain.docs.exception.DocExceptionType;
-import mars_6th.VER6.domain.minio.dto.PresignedUrlResponseDto;
+import mars_6th.VER6.domain.docs.repo.DocDetailRepository;
+import mars_6th.VER6.domain.minio.dto.PresignedUrlResponse;
 import mars_6th.VER6.global.exception.BaseException;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class FileService {
 
-    private final MinioClient minioClient;
     private final MinioService minioService;
+    private final RedisFileService redisFileService;
+    private final DocDetailRepository docDetailRepository;
 
-    public PresignedUrlResponseDto generatePresignedUploadUrl(HttpSession session) throws ServerException, InsufficientDataException, ErrorResponseException, IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidResponseException, XmlParserException, InternalException {
-        boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket("ver6").build());
+    @Transactional
+    public PresignedUrlResponse generatePresignedUploadUrl(Long userId) {
+        String generatedFileName = System.currentTimeMillis() + "_" + java.util.UUID.randomUUID();
+        redisFileService.saveFileName(userId, generatedFileName);
 
-        if (found) {
-            System.out.println("존재");
-        } else {
-            System.out.println("미존재");
-        }
-
-        String generatedFileName = System.currentTimeMillis() + "_" + java.util.UUID.randomUUID().toString();
-        session.setAttribute("generatedFileName", generatedFileName);
         String presignedUrl = minioService.getPresignedUploadUrl(generatedFileName, 10);
-        log.info("생성된 고유 파일명: {}, Presigned URL: {}", generatedFileName, presignedUrl);
-        return new PresignedUrlResponseDto(presignedUrl, generatedFileName);
+        return PresignedUrlResponse.ofUpload(presignedUrl, generatedFileName);
     }
 
-    public String determineFileUrl(String externalUrl, HttpSession session) {
-        if (externalUrl != null && !externalUrl.isBlank()) {
-            return externalUrl;
-        }
-        Object fileNameObj = session.getAttribute("generatedFileName");
-        if (fileNameObj == null) {
+    /**
+     * 외부 URL이 주어지면 그대로 반환하고, 없으면 redis에 저장된 파일명을 이용하여 minio에 저장된 파일 URL을 반환한다.
+     */
+    public String extractFileUrl(Long userId) {
+        String fileName = redisFileService.getFileName(userId);
+
+        if (fileName == null) {
             throw new BaseException(DocExceptionType.EMPTY_FILE_ERROR);
         }
-        return minioService.getFilePath(fileNameObj.toString());
+
+        return fileName;
     }
 
-    public String getDownloadUrl(String fileUrl) {
-        if (fileUrl == null || fileUrl.isEmpty()) {
+    public PresignedUrlResponse getDownloadUrl(Long docDetailId) {
+        DocDetail docDetail = docDetailRepository.getDocDetailById(docDetailId);
+
+        if (docDetail.existExternalUrl()) {
             throw new BaseException(DocExceptionType.FILE_DOWNLOAD_ERROR);
         }
-        if (minioService.isExternalUrl(fileUrl)) {
-            return fileUrl;
-        }
-        return minioService.getPresignedDownloadUrl(minioService.extractObject(fileUrl), 10);
+
+        String presignedUrl = minioService.getPresignedDownloadUrl(docDetail.getFileName(), 10);
+
+        return PresignedUrlResponse.ofDownload(presignedUrl);
     }
 
-    public void deleteFileIfInternal(String fileUrl) {
-        if (fileUrl != null && !fileUrl.isEmpty() && !minioService.isExternalUrl(fileUrl)) {
-            minioService.deleteFile(fileUrl);
-            log.info("파일 삭제 성공: {}", fileUrl);
+    public void deleteFileIfInternal(String fileName) {
+        if (fileName != null && !fileName.isEmpty() && !minioService.isExternalUrl(fileName)) {
+            minioService.deleteFile(fileName);
         }
     }
 }

@@ -6,7 +6,6 @@ import mars_6th.VER6.global.utils.BaseEntity;
 
 import java.util.List;
 
-@EqualsAndHashCode(callSuper = true)
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,19 +23,13 @@ public class Doc extends BaseEntity {
     private DocType docType;
 
     @OneToMany(mappedBy = "doc", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<DocRequest> docRequest;
+    private List<DocDetail> docDetails;
 
+    @OneToMany(mappedBy = "doc", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DocRequest> docRequests;
+
+    @Column(unique = true)
     private String title;
-
-    private String content;
-
-    private String version;
-
-    private String fileName;
-
-    private String fileUrl;
-
-    private Long createdBy;
 
     @Builder.Default
     private boolean isUpdated = false;
@@ -46,29 +39,8 @@ public class Doc extends BaseEntity {
         docType.getDocs().add(this);
     }
 
-    public Doc updateName(String title) {
+    public void updateTitle(String title) {
         this.title = title;
-        return this;
-    }
-
-    public Doc updateVersion(String version) {
-        this.version = version;
-        return this;
-    }
-
-    public Doc updateFileName(String fileName) {
-        this.fileName = fileName;
-        return this;
-    }
-
-    public Doc updateContent(String content) {
-        this.content = content;
-        return this;
-    }
-
-    public Doc updateFileUrl(String fileUrl) {
-        this.fileUrl = fileUrl;
-        return this;
     }
 
     public void markAsUpdated() {
