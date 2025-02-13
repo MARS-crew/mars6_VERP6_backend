@@ -15,6 +15,8 @@ public enum DocExceptionType implements ExceptionType {
     NOT_FOUND_DOC(HttpStatus.NOT_FOUND, "docs-001", "문서를 찾을 수 없습니다."),
     DUPLICATED_DOC(HttpStatus.BAD_REQUEST, "docs-002", "이미 존재하는 문서입니다."),
 
+    NOT_FOUND_DOC_DETAIL(HttpStatus.NOT_FOUND, "docs-detail-001", "문서 상세를 찾을 수 없습니다."),
+
     NOT_FOUND_DOC_TYPE(HttpStatus.NOT_FOUND, "docs-type-001", "문서 타입을 찾을 수 없습니다."),
     DUPLICATED_DOC_TYPE(HttpStatus.BAD_REQUEST, "docs-type-002", "이미 존재하는 문서 타입입니다."),
 
@@ -24,7 +26,9 @@ public enum DocExceptionType implements ExceptionType {
     FILE_DELETE_ERROR(BAD_REQUEST, "docs-request-004", "파일 삭제 중 오류가 발생했습니다."),
     EMPTY_FILE_ERROR(BAD_REQUEST, "docs-request-005", "업로드할 파일이 비어 있습니다."),
     EMPTY_FILE_PATH_ERROR(BAD_REQUEST, "docs-request-006", "삭제할 파일 경로가 비어 있습니다."),
-    INVALID_FILE_PATH_ERROR(BAD_REQUEST, "docs-request-007", "잘못된 파일 경로입니다.")
+    INVALID_FILE_PATH_ERROR(BAD_REQUEST, "docs-request-007", "잘못된 파일 경로입니다."),
+
+    MINIO_BUCKET_ERROR(BAD_REQUEST, "docs-minio-001", "버킷 생성 중 오류가 발생했습니다."),
     ;
 
     private final HttpStatus httpStatus;
