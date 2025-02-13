@@ -15,10 +15,17 @@ spring:
     username:
     password:
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto:
     show-sql: true
+
+  data:
+    redis:
+      host:
+      port: 6379
+      timeout: 60000
 
 minio:
   url:
