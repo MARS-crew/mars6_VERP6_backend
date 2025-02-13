@@ -2,8 +2,7 @@ package mars_6th.VER6.domain.docs.entity;
 
 public enum DocRequestStatus {
 
-    REQUESTED, // 요청됨
+    PENDING, // 대기
     IN_PROGRESS, // 진행중
-    COMPLETED, // 완료됨
-    CANCELED // 취소됨
+    COMPLETED, // 완료
 }

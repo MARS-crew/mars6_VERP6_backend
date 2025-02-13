@@ -8,10 +8,9 @@ public record DocRequestDto(
         String title,
         Long docTypeId
 ) {
-    public Doc toEntity(Long memberId) {
+    public Doc toEntity() {
         return Doc.builder()
                 .title(title)
-                .createdBy(memberId)
                 .build();
     }
 }
