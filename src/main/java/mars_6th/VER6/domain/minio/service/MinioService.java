@@ -1,8 +1,7 @@
 package mars_6th.VER6.domain.minio.service;
 
-import io.minio.GetPresignedObjectUrlArgs;
-import io.minio.MinioClient;
-import io.minio.RemoveObjectArgs;
+import io.minio.*;
+import io.minio.errors.*;
 import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +9,10 @@ import mars_6th.VER6.domain.docs.exception.DocExceptionType;
 import mars_6th.VER6.global.config.MinioConfig;
 import mars_6th.VER6.global.exception.BaseException;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 @Service
 @RequiredArgsConstructor
@@ -20,9 +23,7 @@ public class MinioService {
     private final MinioConfig minioConfig;
 
     public String getPresignedUploadUrl(String filename, int expiryMinutes) {
-        if (filename == null || filename.isBlank()) {
-            throw new BaseException(DocExceptionType.EMPTY_FILE_ERROR);
-        }
+        ensureBucketExists();
 
         try {
             String presignedUrl = minioClient.getPresignedObjectUrl(
@@ -44,16 +45,14 @@ public class MinioService {
     }
 
     public String getPresignedDownloadUrl(String filename, int expiryMinutes) {
-        if (filename == null || filename.isBlank()) {
-            throw new BaseException(DocExceptionType.EMPTY_FILE_ERROR);
-        }
+        ensureBucketExists();
 
         try {
             String presignedUrl = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.GET)
                             .bucket(minioConfig.getBucketName())
-                            .object(filename)
+                            .object(filename + "\\")
                             .expiry(expiryMinutes * 60)
                             .build()
             );
@@ -67,22 +66,16 @@ public class MinioService {
         }
     }
 
-    public void deleteFile(String fileUrl) {
-        if (fileUrl == null || fileUrl.isBlank()) {
-            throw new BaseException(DocExceptionType.EMPTY_FILE_PATH_ERROR);
-        }
-
+    public void deleteFile(String fileName) {
         try {
-            String objectName = extractObject(fileUrl);
-
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
                             .bucket(minioConfig.getBucketName())
-                            .object(objectName)
+                            .object(fileName)
                             .build()
             );
 
-            log.info("파일 삭제 성공: {}", fileUrl);
+            log.info("파일 삭제 성공: {}", fileName);
 
         } catch (Exception e) {
             log.error("파일 삭제 중 오류 발생: {}", e.getMessage(), e);
@@ -90,22 +83,20 @@ public class MinioService {
         }
     }
 
-    public String getFilePath(String filename) {
-        if (filename == null || filename.isBlank()) {
-            throw new BaseException(DocExceptionType.EMPTY_FILE_ERROR);
-        }
-        return "/" + minioConfig.getBucketName() + "/" + filename;
-    }
-
     public boolean isExternalUrl(String url) {
         return url.startsWith("http://") || url.startsWith("https://");
     }
 
-    public String extractObject(String fileUrl) {
-        String bucketPrefix = "/" + minioConfig.getBucketName() + "/";
-        if (!fileUrl.startsWith(bucketPrefix)) {
-            throw new BaseException(DocExceptionType.INVALID_FILE_PATH_ERROR);
+    private void ensureBucketExists() {
+        try {
+            if (!minioClient.bucketExists(BucketExistsArgs.builder().bucket(minioConfig.getBucketName()).build())) {
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(minioConfig.getBucketName()).build());
+            }
+        } catch (InvalidKeyException | IOException | NoSuchAlgorithmException | InsufficientDataException |
+                 ErrorResponseException | InternalException | InvalidResponseException | ServerException |
+                 XmlParserException e) {
+            log.error("버킷 생성 실패: {}", e.getMessage());
+            throw new BaseException(DocExceptionType.MINIO_BUCKET_ERROR);
         }
-        return fileUrl.replaceFirst("^" + bucketPrefix, "");
     }
 }
