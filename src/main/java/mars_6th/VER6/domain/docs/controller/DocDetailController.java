@@ -1,6 +1,7 @@
 package mars_6th.VER6.domain.docs.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -35,12 +36,20 @@ public class DocDetailController {
     @PostMapping("/{docId}")
     public ResponseEntity<DocDetailResponse> createDocDetail(
             @PathVariable Long docId,
+
+            @Parameter(description = "외부 URL을 입력해야 합니다")
             @RequestParam(required = false) String externalUrl,
-            @RequestParam(required = false) String originalFileName,
+
+            @Parameter(description = "presigned-url 을 통해 생성된 generatedFileName을 입력해야 합니다")
+            @RequestParam(required = false) String uploadFileUrl,
+
+            @RequestParam(required = false) String fileName,
+
             @RequestBody @Valid DocDetailRequest request,
             HttpSession session) {
         Member member = sessionService.validateSession(session);
-        return ResponseEntity.ok(docDetailService.createDocDetail(member.getId(), docId, request, originalFileName, externalUrl));
+        return ResponseEntity.ok(docDetailService.createDocDetail(
+                member.getId(), docId, request, uploadFileUrl, fileName, externalUrl));
     }
 
     @Operation(summary = "문서 상태 수정 API", description = "문서 상태를 수정합니다. \n" +

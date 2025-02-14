@@ -36,15 +36,15 @@ public class DocDetailService {
                 .toList();
     }
 
-    public DocDetailResponse createDocDetail(Long userId, Long docId, DocDetailRequest docDetailRequest, String originalFileName, String externalUrl) {
+    public DocDetailResponse createDocDetail(Long userId, Long docId, DocDetailRequest docDetailRequest,
+                                             String uploadFileUrl, String fileName, String externalUrl) {
         Doc doc = docRepository.getDocById(docId);
 
         DocDetail docDetail;
         if (externalUrl != null && !externalUrl.isBlank()) {
             docDetail = DocDetail.fromFileUrl(userId, docDetailRequest, externalUrl);
         } else {
-            String fileUrl = fileService.extractFileUrl(userId);
-            docDetail = DocDetail.fromFileName(userId, docDetailRequest, fileUrl);
+            docDetail = DocDetail.fromFileName(userId, docDetailRequest, uploadFileUrl, fileName);
         }
 
         docDetail.addDoc(doc);
@@ -64,7 +64,7 @@ public class DocDetailService {
         DocDetail docDetail = docDetailRepository.getDocDetailById(docDetailId);
 
         if (!docDetail.existExternalUrl()) {
-            fileService.deleteFileIfInternal(docDetail.getFileName());
+            fileService.deleteFileIfInternal(docDetail.getUploadFileUrl());
         }
         docDetailRepository.delete(docDetail);
     }

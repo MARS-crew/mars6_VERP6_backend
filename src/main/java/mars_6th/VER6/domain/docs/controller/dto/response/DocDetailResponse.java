@@ -9,6 +9,7 @@ public record DocDetailResponse(
         Long docDetailId,
         String version,
         String fileName,
+        String content,
         LocalDate createdAt,
         DocDetailStatus status
 ) {
@@ -16,7 +17,8 @@ public record DocDetailResponse(
         return new DocDetailResponse(
                 docDetail.getId(),
                 docDetail.getVersion(),
-                docDetail.getFileName(),
+                docDetail.getOriginalFileName(),
+                docDetail.getContent(),
                 docDetail.getCreatedAt().toLocalDate(),
                 docDetail.getStatus()
         );

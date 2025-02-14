@@ -20,7 +20,7 @@ public interface DocDetailRepository extends JpaRepository<DocDetail, Long> {
     @Query("SELECT d FROM DocDetail d WHERE d.doc.id = :docId")
     List<DocDetail> findDocDetailsByDocId(@Param("docId") Long docId);
 
-    @Query(nativeQuery = true, value = "SELECT file_name FROM tbl_doc_detail WHERE status = 'APPROVED' ORDER BY created_at DESC LIMIT 1")
+    @Query(nativeQuery = true, value = "SELECT original_file_name FROM tbl_doc_detail WHERE status = 'APPROVED' ORDER BY created_at DESC LIMIT 1")
     String findFileName();
 
 }

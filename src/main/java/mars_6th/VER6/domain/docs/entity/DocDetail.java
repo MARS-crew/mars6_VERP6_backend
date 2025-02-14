@@ -5,8 +5,6 @@ import lombok.*;
 import mars_6th.VER6.domain.docs.controller.dto.request.DocDetailRequest;
 import mars_6th.VER6.global.utils.BaseEntity;
 
-import java.util.List;
-
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Getter
@@ -29,30 +27,36 @@ public class DocDetail extends BaseEntity {
     private String version;
 
     // minio bucket 에 저장된 파일명
-    private String fileName;
+    private String uploadFileUrl;
+
+    // 사용자가 입력한 파일명
+    private String originalFileName;
 
     // minio 등록되지 않은 외부 url
-    private String fileUrl;
+    private String externalFileUrl;
 
     private Long createdBy;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
-    private DocDetailStatus status;
+    private DocDetailStatus status = DocDetailStatus.PENDING;
 
-    public static DocDetail fromFileName(Long userId, DocDetailRequest request, String fileName) {
+    public static DocDetail fromFileName(Long userId, DocDetailRequest request, String uploadFileUrl, String fileName) {
         return DocDetail.builder()
                 .content(request.content())
                 .version(request.version())
-                .fileName(fileName)
+                .uploadFileUrl(uploadFileUrl)
+                .originalFileName(fileName)
                 .createdBy(userId)
                 .build();
     }
 
-    public static DocDetail fromFileUrl(Long userId, DocDetailRequest request, String fileUrl) {
+    public static DocDetail fromFileUrl(Long userId, DocDetailRequest request, String externalFileUrl) {
         return DocDetail.builder()
                 .content(request.content())
                 .version(request.version())
-                .fileUrl(fileUrl)
+                .externalFileUrl(externalFileUrl)
+                .originalFileName(externalFileUrl)
                 .createdBy(userId)
                 .build();
     }
@@ -63,7 +67,7 @@ public class DocDetail extends BaseEntity {
     }
 
     public boolean existExternalUrl() {
-        return fileUrl != null && !fileUrl.isBlank();
+        return externalFileUrl != null && !externalFileUrl.isBlank();
     }
 
     public void updateStatus(DocDetailStatus status) {

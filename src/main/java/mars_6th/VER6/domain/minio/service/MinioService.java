@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class MinioService {
     private final MinioClient minioClient;
     private final MinioConfig minioConfig;
 
-    public String getPresignedUploadUrl(String filename, int expiryMinutes) {
+    public String getPresignedUploadUrl(String generatedFileUrl, int expiryMinutes) {
         ensureBucketExists();
 
         try {
@@ -30,7 +31,7 @@ public class MinioService {
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.PUT)
                             .bucket(minioConfig.getBucketName())
-                            .object(filename)
+                            .object(generatedFileUrl)
                             .expiry(expiryMinutes * 60)
                             .build()
             );
@@ -44,16 +45,21 @@ public class MinioService {
         }
     }
 
-    public String getPresignedDownloadUrl(String filename, int expiryMinutes) {
+    public String getPresignedDownloadUrl(String fileName, String uploadFileUrl, int expiryMinutes) {
         ensureBucketExists();
 
         try {
+            Map<String, String> queryParams = Map.of(
+                    "response-content-disposition", "attachment; filename=\"" + fileName + "\""
+            );
+
             String presignedUrl = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.GET)
                             .bucket(minioConfig.getBucketName())
-                            .object(filename + "\\")
+                            .object(uploadFileUrl)
                             .expiry(expiryMinutes * 60)
+                            .extraQueryParams(queryParams)
                             .build()
             );
 
@@ -66,16 +72,16 @@ public class MinioService {
         }
     }
 
-    public void deleteFile(String fileName) {
+    public void deleteFile(String uploadFileUrl) {
         try {
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
                             .bucket(minioConfig.getBucketName())
-                            .object(fileName)
+                            .object(uploadFileUrl)
                             .build()
             );
 
-            log.info("파일 삭제 성공: {}", fileName);
+            log.info("파일 삭제 성공: {}", uploadFileUrl);
 
         } catch (Exception e) {
             log.error("파일 삭제 중 오류 발생: {}", e.getMessage(), e);

@@ -61,7 +61,7 @@ public class DocService {
     }
 
     public void deleteDoc(Long docId) {
-        if (docRepository.existsById(docId)) {
+        if (!docRepository.existsById(docId)) {
             throw new BaseException(DocExceptionType.NOT_FOUND_DOC);
         }
 
