@@ -11,6 +11,10 @@ import mars_6th.VER6.global.config.MinioConfig;
 import mars_6th.VER6.global.exception.BaseException;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -58,8 +62,24 @@ public class MinioService {
                             .build()
             );
 
-            log.info("Presigned Download URL 생성 성공: {}", presignedUrl);
-            return presignedUrl;
+            String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8)
+                    .replaceAll("\\+", "%20");
+
+            URI uri = new URI(presignedUrl);
+            String newQuery = (uri.getQuery() == null ? "" : uri.getQuery() + "&") +
+                    "response-content-disposition=attachment; filename=\"" + encodedFilename + "\"";
+
+            URI updatedUri = new URI(
+                    uri.getScheme(),
+                    uri.getAuthority(),
+                    uri.getPath(),
+                    newQuery,
+                    uri.getFragment()
+            );
+
+            String finalUrl = updatedUri.toString();
+            log.info("Presigned Download URL 생성 성공: {}", finalUrl);
+            return finalUrl;
 
         } catch (Exception e) {
             log.error("파일 다운로드 URL 생성 중 오류 발생: {}", e.getMessage(), e);
