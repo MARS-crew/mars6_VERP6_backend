@@ -1,12 +1,16 @@
 package mars_6th.VER6.domain.docs.service;
 
 import lombok.RequiredArgsConstructor;
+import mars_6th.VER6.domain.docs.controller.dto.request.DocDetailRejectReasonRequest;
 import mars_6th.VER6.domain.docs.controller.dto.request.DocDetailRequest;
 import mars_6th.VER6.domain.docs.controller.dto.request.DocDetailStatusUpdateRequest;
+import mars_6th.VER6.domain.docs.controller.dto.response.DocDetailRejectReasonResponse;
 import mars_6th.VER6.domain.docs.controller.dto.response.DocDetailResponse;
 import mars_6th.VER6.domain.docs.entity.Doc;
 import mars_6th.VER6.domain.docs.entity.DocDetail;
+import mars_6th.VER6.domain.docs.entity.DocDetailRejectReason;
 import mars_6th.VER6.domain.docs.exception.DocExceptionType;
+import mars_6th.VER6.domain.docs.repo.DocDetailRejectReasonRepository;
 import mars_6th.VER6.domain.docs.repo.DocDetailRepository;
 import mars_6th.VER6.domain.docs.repo.DocRepository;
 import mars_6th.VER6.domain.minio.service.FileService;
@@ -21,9 +25,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DocDetailService {
 
+    private final FileService fileService;
     private final DocRepository docRepository;
     private final DocDetailRepository docDetailRepository;
-    private final FileService fileService;
+    private final DocDetailRejectReasonRepository docDetailRejectReasonRepository;
 
     public List<DocDetailResponse> getDocDetails(Long docId) {
         List<DocDetail> docDetails = docDetailRepository.findDocDetailsByDocId(docId);
@@ -32,7 +37,15 @@ public class DocDetailService {
         }
 
         return docDetails.stream()
-                .map(DocDetailResponse::of)
+                .map(docDetail -> {
+                    List<DocDetailRejectReasonResponse> rejectReasons = docDetailRejectReasonRepository
+                            .findDocDetailRejectReasonsByDocDetailId(docDetail.getId())
+                            .stream()
+                            .map(DocDetailRejectReasonResponse::of)
+                            .toList();
+
+                    return DocDetailResponse.of(docDetail, rejectReasons);
+                })
                 .toList();
     }
 
@@ -52,7 +65,7 @@ public class DocDetailService {
 
         docDetailRepository.save(docDetail);
 
-        return DocDetailResponse.of(docDetail);
+        return DocDetailResponse.of(docDetail, List.of());
     }
 
     public void updateDocDetailStatus(Long docDetailId, DocDetailStatusUpdateRequest request) {
@@ -69,4 +82,13 @@ public class DocDetailService {
         docDetailRepository.delete(docDetail);
     }
 
+    /* 거절 사유 */
+    public DocDetailRejectReasonResponse addRejectReason(Long docDetailId, DocDetailRejectReasonRequest request) {
+        DocDetail docDetail = docDetailRepository.getDocDetailById(docDetailId);
+
+        DocDetailRejectReason rejectReason = DocDetailRejectReason.from(docDetail, request.reason());
+        rejectReason.addDocDetail(docDetail);
+
+        return DocDetailRejectReasonResponse.of(docDetailRejectReasonRepository.save(rejectReason));
+    }
 }

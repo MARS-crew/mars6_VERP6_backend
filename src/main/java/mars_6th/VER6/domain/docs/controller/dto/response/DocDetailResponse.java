@@ -4,6 +4,7 @@ import mars_6th.VER6.domain.docs.entity.DocDetail;
 import mars_6th.VER6.domain.docs.entity.DocDetailStatus;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record DocDetailResponse(
         Long docDetailId,
@@ -11,16 +12,18 @@ public record DocDetailResponse(
         String fileName,
         String content,
         LocalDate createdAt,
-        DocDetailStatus status
+        DocDetailStatus status,
+        List<DocDetailRejectReasonResponse> rejectReasons
 ) {
-    public static DocDetailResponse of(DocDetail docDetail) {
+    public static DocDetailResponse of(DocDetail docDetail, List<DocDetailRejectReasonResponse> rejectReasons) {
         return new DocDetailResponse(
                 docDetail.getId(),
                 docDetail.getVersion(),
                 docDetail.getOriginalFileName(),
                 docDetail.getContent(),
                 docDetail.getCreatedAt().toLocalDate(),
-                docDetail.getStatus()
+                docDetail.getStatus(),
+                rejectReasons
         );
     }
 }

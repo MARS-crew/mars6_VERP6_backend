@@ -5,6 +5,8 @@ import lombok.*;
 import mars_6th.VER6.domain.docs.controller.dto.request.DocDetailRequest;
 import mars_6th.VER6.global.utils.BaseEntity;
 
+import java.util.List;
+
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Getter
@@ -21,6 +23,9 @@ public class DocDetail extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tbl_doc_id")
     private Doc doc;
+
+    @OneToMany(mappedBy = "docDetail", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DocDetailRejectReason> rejectReasons;
 
     private String content;
 

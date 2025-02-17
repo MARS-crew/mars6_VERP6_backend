@@ -6,8 +6,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import mars_6th.VER6.domain.docs.controller.dto.request.DocDetailRejectReasonRequest;
 import mars_6th.VER6.domain.docs.controller.dto.request.DocDetailRequest;
 import mars_6th.VER6.domain.docs.controller.dto.request.DocDetailStatusUpdateRequest;
+import mars_6th.VER6.domain.docs.controller.dto.response.DocDetailRejectReasonResponse;
 import mars_6th.VER6.domain.docs.controller.dto.response.DocDetailResponse;
 import mars_6th.VER6.domain.docs.service.DocDetailService;
 import mars_6th.VER6.domain.member.entity.Member;
@@ -23,8 +25,8 @@ import java.util.List;
 @RequestMapping("/docs-detail")
 public class DocDetailController {
 
-    private final DocDetailService docDetailService;
     private final SessionService sessionService;
+    private final DocDetailService docDetailService;
 
     @Operation(summary = "문서 종류별 리스트 조회 API")
     @GetMapping("/{docId}")
@@ -72,4 +74,13 @@ public class DocDetailController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "거절 사유 추가 API")
+    @PostMapping("/{docDetailId}/reject-reason")
+    public ResponseEntity<DocDetailRejectReasonResponse> addRejectReason(
+            @PathVariable Long docDetailId,
+            @RequestBody DocDetailRejectReasonRequest request,
+            HttpSession session) {
+        sessionService.validateTeamLeader(session);
+        return ResponseEntity.ok(docDetailService.addRejectReason(docDetailId, request));
+    }
 }
